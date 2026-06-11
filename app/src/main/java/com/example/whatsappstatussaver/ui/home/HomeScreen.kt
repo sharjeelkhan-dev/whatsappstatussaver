@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -71,12 +72,14 @@ fun HomeScreen(
                         Column {
                             Text(
                                 "Status Saver",
+                                modifier = modifier.offset(y = 10.dp),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 22.sp,
                                 color = AppTeal
                             )
                             Text(
                                 "All-in-one downloader",
+                                modifier = modifier.offset(y = 5.dp),
                                 fontSize = 12.sp,
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Medium
@@ -118,7 +121,8 @@ fun HomeScreen(
             )
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                    .offset(y = (-10).dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 PremiumPlatformCard(
@@ -139,6 +143,8 @@ fun HomeScreen(
             Text(
                 "Quick Tools",
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
+                    .offset(y = (-10).dp),
                 fontSize = 18.sp,
                 color = Color(0xFF263238)
             )
@@ -171,6 +177,7 @@ fun HomeScreen(
                 onClick = onNavigateToProfilePhotos,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .offset(y = (-15).dp)
                     .height(100.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -205,10 +212,12 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(20.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Profile Photos", color = Color.White,
+                                modifier = Modifier.offset(y = (4).dp),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp)
                             Text("Download DP in high quality",
                                 color = Color.White.copy(alpha = 0.8f),
+                                modifier = Modifier.offset(y = (-3).dp),
                                 fontSize = 12.sp)
                         }
                         Icon(Icons.AutoMirrored
@@ -219,12 +228,9 @@ fun HomeScreen(
                     }
                 }
             }
-            
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
-
 @Composable
 fun PremiumPlatformCard(title: String,
                         icon: ImageVector,
@@ -261,14 +267,13 @@ fun PremiumPlatformCard(title: String,
         }
     }
 }
-
 @Composable
 fun ModernToolCard(title: String, subtitle: String,
                    icon: ImageVector,
                    onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().offset(y = (-20).dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -296,9 +301,11 @@ fun ModernToolCard(title: String, subtitle: String,
             {
                 Text(title, fontWeight = FontWeight.Bold,
                     color = Color(0xFF263238),
+                    modifier = Modifier.offset(y = (4).dp),
                     fontSize = 15.sp)
                 Text(subtitle, color = Color.Gray,
                     fontSize = 12.sp,
+                    modifier = Modifier.offset(y = (-3).dp),
                     fontWeight = FontWeight.Medium)
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
@@ -308,7 +315,6 @@ fun ModernToolCard(title: String, subtitle: String,
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {

@@ -51,7 +51,8 @@ fun SettingsScreen(
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             context.contentResolver.takePersistableUriPermission(uri, takeFlags)
             viewModel.setSaveLocation(uri)
-            Toast.makeText(context, "Save location updated!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Save location updated!",
+                Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -63,9 +64,11 @@ fun SettingsScreen(
             viewModel.exportMedia(uri) { success ->
                 isExporting = false
                 if (success) {
-                    Toast.makeText(context, "Export Successful!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Export Successful!",
+                        Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Export Failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Export Failed",
+                        Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -85,7 +88,8 @@ fun SettingsScreen(
         },
         onExportData = { exportLauncher.launch("WhatsApp_Statuses_Backup.zip") },
         onCloudBackup = {
-            Toast.makeText(context, "Firebase Cloud Backup is a placeholder.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Firebase Cloud Backup is a placeholder.",
+                Toast.LENGTH_LONG).show()
         }
     )
 }
@@ -147,7 +151,8 @@ fun SettingsContent(
                         Switch(
                             checked = isDarkMode,
                             onCheckedChange = onDarkModeToggle,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTeal)
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White,
+                                checkedTrackColor = AppTeal)
                         )
                     }
                 )
@@ -157,7 +162,9 @@ fun SettingsContent(
                 SettingsRow(
                     icon = Icons.Default.Folder,
                     title = "Custom Save Location",
-                    subtitle = if (customSaveLocation != null) Uri.decode(customSaveLocation) else "Default (Internal Storage)",
+                    subtitle = if (customSaveLocation != null)
+                        Uri.decode(customSaveLocation)
+                    else "Default (Internal Storage)",
                     onClick = onSelectFolder
                 )
             }
@@ -167,7 +174,8 @@ fun SettingsContent(
                     icon = Icons.Default.WorkspacePremium,
                     iconColor = if (isPremium) Color(0xFFFFB300) else AppTeal,
                     title = if (isPremium) "Premium Active" else "Upgrade to Premium",
-                    subtitle = if (isPremium) "Enjoying an ad-free experience" else "Remove ads and unlock all features",
+                    subtitle = if (isPremium) "Enjoying an ad-free experience"
+                    else "Remove ads and unlock all features",
                     onClick = onUpgradePremium
                 )
             }
@@ -175,7 +183,8 @@ fun SettingsContent(
             SettingsSection(title = "Data Management") {
                 SettingsRow(
                     icon = Icons.Default.FileDownload,
-                    title = if (isExporting) "Exporting..." else "Export All Media",
+                    title = if (isExporting) "Exporting..."
+                    else "Export All Media",
                     subtitle = "Create a ZIP backup of all saved statuses",
                     onClick = onExportData,
                     enabled = !isExporting
@@ -187,21 +196,9 @@ fun SettingsContent(
                     onClick = onCloudBackup
                 )
             }
-
-            SettingsSection(title = "Other") {
-                SettingsRow(
-                    icon = Icons.Default.Info,
-                    title = "Version",
-                    subtitle = "1.0.0 (Stable)",
-                    onClick = {}
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
-
 @Composable
 fun SettingsSection(title: String, content:
 @Composable ColumnScope.() -> Unit) {
@@ -225,7 +222,6 @@ fun SettingsSection(title: String, content:
         }
     }
 }
-
 @Composable
 fun SettingsRow(
     icon: ImageVector,
@@ -295,7 +291,6 @@ fun SettingsScreenPreview() {
         )
     }
 }
-
 @Preview(showBackground = true, name = "Premium Active")
 @Composable
 fun SettingsScreenPremiumPreview() {
