@@ -66,7 +66,7 @@ fun HomeScreen(
 ) {
     Scaffold(
         topBar = {
-            Surface(shadowElevation = 6.dp) {
+            Surface(shadowElevation = 4.dp) {
                 TopAppBar(
                     title = {
                         Column {
@@ -79,7 +79,7 @@ fun HomeScreen(
                             )
                             Text(
                                 "All-in-one downloader",
-                                modifier = modifier.offset(y = 5.dp),
+                                modifier = modifier.offset(y = 6.dp),
                                 fontSize = 12.sp,
                                 color = Color.Gray,
                                 fontWeight = FontWeight.Medium
@@ -94,10 +94,14 @@ fun HomeScreen(
                                 .background(LightTeal, CircleShape)
                                 .size(40.dp)
                         ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppTeal, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = AppTeal,
+                                modifier = Modifier.size(20.dp))
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                    colors = TopAppBarDefaults
+                        .topAppBarColors(containerColor = Color.White)
                 )
             }
         },
@@ -109,52 +113,50 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF8FAFB))
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(horizontal = 20.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Main Platform Section - Premium Gradient Look
-            Text(
-                "Choose Platform",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color(0xFF263238)
-            )
+            // Main Platform Section
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "Choose Platform",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF263238)
+                )
 
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .offset(y = (-10).dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                PremiumPlatformCard(
-                    title = "WhatsApp",
-                    icon = ImageVector.vectorResource(id = R.drawable.speaking_bubbles_line_icon),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onNavigateToStatus(PlatformType.WHATSAPP) }
-                )
-                PremiumPlatformCard(
-                    title = "Business",
-                    icon = ImageVector.vectorResource(id = R.drawable.briefcase_line_icon),
-                    modifier = Modifier.weight(1f),
-                    onClick = { onNavigateToStatus(PlatformType.WHATSAPP_BUSINESS) }
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    PremiumPlatformCard(
+                        title = "WhatsApp",
+                        icon = ImageVector.vectorResource(id = R.drawable.speaking_bubbles_line_icon),
+                        modifier = Modifier.weight(1f),
+                        onClick = { onNavigateToStatus(PlatformType.WHATSAPP) }
+                    )
+                    PremiumPlatformCard(
+                        title = "Business",
+                        icon = ImageVector.vectorResource(id = R.drawable.briefcase_line_icon),
+                        modifier = Modifier.weight(1f),
+                        onClick = { onNavigateToStatus(PlatformType.WHATSAPP_BUSINESS) }
+                    )
+                }
             }
 
-            // Quick Tools - Modern Grid Style
-            Text(
-                "Quick Tools",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-                    .offset(y = (-10).dp),
-                fontSize = 18.sp,
-                color = Color(0xFF263238)
-            )
-
+            // Quick Tools Section
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    "Quick Tools",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF263238)
+                )
+
                 ModernToolCard(
                     title = "Direct Chat",
                     subtitle = "Message without saving number",
-                    icon = ImageVector.vectorResource
-                        (id = R.drawable.navigate_icon),
+                    icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
                     onClick = onNavigateToDirectChat
                 )
                 ModernToolCard(
@@ -166,8 +168,7 @@ fun HomeScreen(
                 ModernToolCard(
                     title = "Daily Reminder",
                     subtitle = "Never miss a status again",
-                    icon = ImageVector.vectorResource
-                        (id = R.drawable.alarm_clock_icon),
+                    icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
                     onClick = onNavigateToReminder
                 )
             }
@@ -177,7 +178,6 @@ fun HomeScreen(
                 onClick = onNavigateToProfilePhotos,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(y = (-15).dp)
                     .height(100.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -212,16 +212,13 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(20.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Profile Photos", color = Color.White,
-                                modifier = Modifier.offset(y = (4).dp),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp)
                             Text("Download DP in high quality",
                                 color = Color.White.copy(alpha = 0.8f),
-                                modifier = Modifier.offset(y = (-3).dp),
                                 fontSize = 12.sp)
                         }
-                        Icon(Icons.AutoMirrored
-                            .Filled.ArrowForwardIos,
+                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(16.dp))
@@ -231,6 +228,7 @@ fun HomeScreen(
         }
     }
 }
+
 @Composable
 fun PremiumPlatformCard(title: String,
                         icon: ImageVector,
@@ -238,7 +236,7 @@ fun PremiumPlatformCard(title: String,
                         modifier: Modifier) {
     Card(
         onClick = onClick,
-        modifier = modifier.height(150.dp),
+        modifier = modifier.height(140.dp),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -250,7 +248,7 @@ fun PremiumPlatformCard(title: String,
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(60.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(LightTeal),
                 contentAlignment = Alignment.Center
@@ -258,22 +256,23 @@ fun PremiumPlatformCard(title: String,
                 Icon(icon,
                     contentDescription = title,
                     tint = AppTeal,
-                    modifier = Modifier.size(32.dp))
+                    modifier = Modifier.size(30.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(title, fontWeight = FontWeight.ExtraBold,
                 color = Color(0xFF263238),
                 fontSize = 16.sp)
         }
     }
 }
+
 @Composable
 fun ModernToolCard(title: String, subtitle: String,
                    icon: ImageVector,
                    onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().offset(y = (-20).dp),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -301,11 +300,9 @@ fun ModernToolCard(title: String, subtitle: String,
             {
                 Text(title, fontWeight = FontWeight.Bold,
                     color = Color(0xFF263238),
-                    modifier = Modifier.offset(y = (4).dp),
                     fontSize = 15.sp)
                 Text(subtitle, color = Color.Gray,
                     fontSize = 12.sp,
-                    modifier = Modifier.offset(y = (-3).dp),
                     fontWeight = FontWeight.Medium)
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
@@ -315,6 +312,7 @@ fun ModernToolCard(title: String, subtitle: String,
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {

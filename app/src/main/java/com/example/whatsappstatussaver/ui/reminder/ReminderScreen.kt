@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,19 +68,29 @@ fun ReminderListScreen(
     onAddNew: () -> Unit,
     onDelete: (ReminderEntity) -> Unit
 ) {
+    val todayRemindersCount = reminders.count {
+        val cal = Calendar.getInstance()
+        val reminderCal = Calendar.getInstance().apply { timeInMillis = it.date }
+        cal.get(Calendar.YEAR) == reminderCal.get(Calendar.YEAR) &&
+                cal.get(Calendar.DAY_OF_YEAR) == reminderCal.get(Calendar.DAY_OF_YEAR)
+    }
+    
+    val scheduledCount = reminders.size
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reminders", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Reminder", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .background(Color(0xFFE0F2F1), RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFE0F2F1))
                     ) {
-                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = AppTeal, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AppTeal, modifier = Modifier.size(18.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -92,29 +105,153 @@ fun ReminderListScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Reminder")
             }
-        }
+        },
+        containerColor = Color.White
     ) { paddingValues ->
-        if (reminders.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.NotificationsNone, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("No reminders set", color = Color.Gray)
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(Color(0xFFF5F7F8))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // Stats Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                reminders.forEach { reminder ->
-                    ReminderItem(reminder = reminder, onDelete = { onDelete(reminder) })
-                }
+                ReminderStatCard(
+                    title = "Today",
+                    count = todayRemindersCount,
+                    icon = Icons.Default.CalendarToday,
+                    modifier = Modifier.weight(1f)
+                )
+                ReminderStatCard(
+                    title = "Scheduled",
+                    count = scheduledCount,
+                    icon = Icons.Default.Event,
+                    modifier = Modifier.weight(1f)
+                )
             }
+
+            // My Lists Section
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "My Lists",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color(0xFF263238)
+                )
+                
+                ReminderListItem(
+                    title = "Reminders",
+                    count = reminders.size,
+                    icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                    onClick = { /* Could navigate to detailed list if needed */ }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderStatCard(
+    title: String,
+    count: Int,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.height(100.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F7F7))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(AppTeal),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                }
+                Text(
+                    text = count.toString(),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF263238)
+                )
+            }
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+fun ReminderListItem(
+    title: String,
+    count: Int,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1).copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(AppTeal),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF263238)
+            )
+            Text(
+                text = count.toString(),
+                fontSize = 16.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

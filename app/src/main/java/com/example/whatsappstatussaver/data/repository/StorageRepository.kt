@@ -273,29 +273,44 @@ class StorageRepository @Inject constructor(
         val activePhotoNames = mutableSetOf<String>()
         var folderFound = false
 
+        Log.d("StorageRepo", "--- Starting Profile Photo Scan for ${platform.name} ---")
+        Log.d("StorageRepo", "Total Persisted Permissions: ${persistedPermissions.size}")
+
         val platformPermissions = persistedPermissions.filter {
             it.isReadPermission && isUriRelevantForFolder(it.uri.toString(), platform, forProfilePhotos = true)
         }
 
+        Log.d("StorageRepo", "Relevant Permissions for ${platform.name}: ${platformPermissions.size}")
+
         platformPermissions.forEach { permission ->
+            Log.d("StorageRepo", "Checking Permission URI: ${permission.uri}")
             try {
                 val root = DocumentFile.fromTreeUri(context, permission.uri)
                 if (root != null) {
+                    Log.d("StorageRepo", "Root Folder Name: ${root.name}")
                     val targetFolders = resolveAllPossibleProfileFolders(root, platform)
+                    Log.d("StorageRepo", "Target Folders Found: ${targetFolders.size}")
+                    
                     if (targetFolders.isNotEmpty()) {
                         folderFound = true
                         targetFolders.forEach { folder ->
-                            folder.listFiles().forEach { file ->
+                            Log.d("StorageRepo", "Scanning Folder: ${folder.uri}")
+                            val files = folder.listFiles()
+                            Log.d("StorageRepo", "Files in Folder: ${files.size}")
+                            files.forEach { file ->
                                 val name = file.name
                                 if (!name.isNullOrEmpty() && !name.endsWith(".nomedia") && isMediaFile(name)) {
                                     if (!activePhotoNames.contains(name)) {
                                         activePhotoNames.add(name)
+                                        Log.d("StorageRepo", "Found Photo: $name")
                                         cacheProfilePhotoFromUri(file.uri, name, platform)
                                     }
                                 }
                             }
                         }
                     }
+                } else {
+                    Log.e("StorageRepo", "Root DocumentFile is null for URI: ${permission.uri}")
                 }
             } catch (e: Exception) {
                 Log.e("StorageRepo", "Profile photo scan error", e)
@@ -303,6 +318,10 @@ class StorageRepository @Inject constructor(
         }
 
         if (folderFound) debugMsg = "Success: Loaded profile photos."
+        else {
+            Log.w("StorageRepo", "No profile photo folders were successfully resolved.")
+            debugMsg = "No Profile Photos folder found. Please ensure you've viewed DPs in WhatsApp and granted permission to the correct folder."
+        }
 
         val cacheFolder = getProfileCacheFolder(platform)
         cacheFolder.listFiles()?.forEach { file ->
@@ -316,26 +335,60 @@ class StorageRepository @Inject constructor(
                 photos.add(StatusMedia(uri = Uri.fromFile(file), name = file.name, type = mediaType, size = file.length(), dateModified = file.lastModified(), platform = platform, isProfilePhoto = true))
             }
         }
+        
+        Log.d("StorageRepo", "Final Profile Photo Count: ${photos.size}")
         Pair(photos.distinctBy { it.name }.sortedByDescending { it.dateModified }, debugMsg)
     }
 
     private fun resolveAllPossibleProfileFolders(root: DocumentFile, platform: PlatformType): List<DocumentFile> {
         val folders = mutableListOf<DocumentFile>()
+        
+        // Comprehensive path list for WhatsApp Profile Photos
         val paths = if (platform == PlatformType.WHATSAPP) {
-            listOf("com.whatsapp/WhatsApp/Media/WhatsApp Profile Photos", "WhatsApp/Media/WhatsApp Profile Photos", "Media/WhatsApp Profile Photos")
+            listOf(
+                "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Profile Photos",
+                "com.whatsapp/WhatsApp/Media/WhatsApp Profile Photos",
+                "WhatsApp/Media/WhatsApp Profile Photos",
+                "Media/WhatsApp Profile Photos",
+                "WhatsApp Profile Photos"
+            )
         } else {
-            listOf("com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Profile Photos", "WhatsApp Business/Media/WhatsApp Profile Photos", "Media/WhatsApp Profile Photos")
+            listOf(
+                "Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Profile Photos",
+                "com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Profile Photos",
+                "WhatsApp Business/Media/WhatsApp Profile Photos",
+                "Media/WhatsApp Profile Photos",
+                "WhatsApp Profile Photos"
+            )
         }
+
         paths.forEach { path ->
             var current: DocumentFile? = root
-            path.split("/").forEach { segment ->
-                if (current?.name == segment) return@forEach
-                current = current?.findFile(segment)
-                if (current == null) return@forEach
+            val segments = path.split("/")
+            for (segment in segments) {
+                // If the current root's name is part of the path, we skip segments until we align
+                if (current?.name == segment) continue 
+                
+                val found = current?.findFile(segment)
+                if (found != null) {
+                    current = found
+                } else {
+                    current = null
+                    break
+                }
             }
-            if (current != null && current.isDirectory) folders.add(current)
+            if (current != null && current.isDirectory) {
+                folders.add(current!!)
+            }
         }
-        return folders
+
+        // Fallback: If no folder found via direct paths, do a recursive search
+        if (folders.isEmpty()) {
+            val deepFound = findFolderRecursive(root, "WhatsApp Profile Photos", 8)
+            if (deepFound != null) folders.add(deepFound)
+        }
+
+        return folders.distinctBy { it.uri }
     }
 
     private fun getProfileCacheFolder(platform: PlatformType): File {

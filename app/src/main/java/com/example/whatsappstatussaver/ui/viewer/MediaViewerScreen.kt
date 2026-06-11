@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -61,7 +62,34 @@ fun MediaViewerScreen(
     val coroutineScope = rememberCoroutineScope()
     var isCompressing by remember { mutableStateOf(false) }
     var showTagDialog by remember { mutableStateOf(false) }
+    var showPlatformDialog by remember { mutableStateOf(false) }
+    var pendingShareAction by remember { mutableStateOf<((PlatformType) -> Unit)?>(null) }
     var tagInput by remember { mutableStateOf(statusMedia.tags) }
+
+    fun checkAndShare(action: (PlatformType) -> Unit) {
+        val isWhatsappInstalled = try {
+            context.packageManager.getPackageInfo("com.whatsapp", 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+        val isBusinessInstalled = try {
+            context.packageManager.getPackageInfo("com.whatsapp.w4b", 0)
+            true
+        } catch (e: Exception) {
+            false
+        }
+
+        when {
+            isWhatsappInstalled && isBusinessInstalled -> {
+                pendingShareAction = action
+                showPlatformDialog = true
+            }
+            isWhatsappInstalled -> action(PlatformType.WHATSAPP)
+            isBusinessInstalled -> action(PlatformType.WHATSAPP_BUSINESS)
+            else -> Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
+        }
+    }
     val exoPlayer = remember(statusMedia.uri) {
         ExoPlayer.Builder(context).build().apply {
             if (statusMedia.type == MediaType.VIDEO) {
@@ -124,43 +152,39 @@ fun MediaViewerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // WhatsApp Share Button
+                // WhatsApp Share Button (Direct Message)
                 IconButton(
                     onClick = {
-                        coroutineScope.launch {
-                            val packageName = if (statusMedia.platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
-                            val platformName = if (statusMedia.platform == PlatformType.WHATSAPP) "WhatsApp" else "WhatsApp Business"
-
-                            try {
-                                var finalUri = statusMedia.uri
-                                if (statusMedia.type == MediaType.VIDEO && onCompressVideo != null) {
-                                    isCompressing = true
-                                    val compressedUri = onCompressVideo(statusMedia.uri)
-                                    if (compressedUri != null) {
-                                        finalUri = compressedUri
+                        val shareAction: (PlatformType) -> Unit = { platform ->
+                            coroutineScope.launch {
+                                val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
+                                try {
+                                    var finalUri = statusMedia.uri
+                                    if (statusMedia.type == MediaType.VIDEO && onCompressVideo != null) {
+                                        isCompressing = true
+                                        onCompressVideo(statusMedia.uri)?.let { finalUri = it }
+                                        isCompressing = false
                                     }
+
+                                    val contentUri = if (finalUri.scheme == "file") {
+                                        val file = File(finalUri.path ?: "")
+                                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                    } else finalUri
+
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
+                                        putExtra(Intent.EXTRA_STREAM, contentUri)
+                                        setPackage(packageName)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(shareIntent)
+                                } catch (e: Exception) {
                                     isCompressing = false
+                                    Toast.makeText(context, "Share failed", Toast.LENGTH_SHORT).show()
                                 }
-
-                                val contentUri = if (finalUri.scheme == "file") {
-                                    val file = File(finalUri.path ?: "")
-                                    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                } else {
-                                    finalUri
-                                }
-
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
-                                    putExtra(Intent.EXTRA_STREAM, contentUri)
-                                    setPackage(packageName)
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                }
-                                context.startActivity(shareIntent)
-                            } catch (e: Exception) {
-                                isCompressing = false
-                                Toast.makeText(context, "$platformName not installed or share failed", Toast.LENGTH_SHORT).show()
                             }
                         }
+                        checkAndShare(shareAction)
                     },
                     modifier = Modifier
                         .size(56.dp)
@@ -177,19 +201,14 @@ fun MediaViewerScreen(
                                 var finalUri = statusMedia.uri
                                 if (statusMedia.type == MediaType.VIDEO && onCompressVideo != null) {
                                     isCompressing = true
-                                    val compressedUri = onCompressVideo(statusMedia.uri)
-                                    if (compressedUri != null) {
-                                        finalUri = compressedUri
-                                    }
+                                    onCompressVideo(statusMedia.uri)?.let { finalUri = it }
                                     isCompressing = false
                                 }
 
                                 val contentUri = if (finalUri.scheme == "file") {
                                     val file = File(finalUri.path ?: "")
                                     FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                } else {
-                                    finalUri
-                                }
+                                } else finalUri
 
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
@@ -223,16 +242,47 @@ fun MediaViewerScreen(
                     Icon(Icons.Default.Download, contentDescription = "Download", tint = Color.White)
                 }
 
-                // Tag Button (Only for SAVED media)
-                if (statusMedia.platform == PlatformType.SAVED && onTagUpdate != null) {
-                    IconButton(
-                        onClick = { showTagDialog = true },
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(AppTeal, CircleShape)
-                    ) {
-                        Icon(Icons.Default.Label, contentDescription = "Tag Contact", tint = Color.White)
-                    }
+                // Repost Button
+                IconButton(
+                    onClick = {
+                        val repostAction: (PlatformType) -> Unit = { platform ->
+                            coroutineScope.launch {
+                                val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
+                                try {
+                                    var finalUri = statusMedia.uri
+                                    if (statusMedia.type == MediaType.VIDEO && onCompressVideo != null) {
+                                        isCompressing = true
+                                        onCompressVideo(statusMedia.uri)?.let { finalUri = it }
+                                        isCompressing = false
+                                    }
+
+                                    val contentUri = if (finalUri.scheme == "file") {
+                                        val file = File(finalUri.path ?: "")
+                                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                    } else finalUri
+
+                                    // For reposting, we often want to target the status specifically
+                                    // but ACTION_SEND with package is usually sufficient.
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
+                                        putExtra(Intent.EXTRA_STREAM, contentUri)
+                                        setPackage(packageName)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(shareIntent)
+                                } catch (e: Exception) {
+                                    isCompressing = false
+                                    Toast.makeText(context, "Repost failed", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                        checkAndShare(repostAction)
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(AppTeal, CircleShape)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Reply, contentDescription = "Repost", tint = Color.White)
                 }
             }
         },
@@ -328,6 +378,30 @@ fun MediaViewerScreen(
                 dismissButton = {
                     TextButton(onClick = { showTagDialog = false }) {
                         Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showPlatformDialog) {
+            AlertDialog(
+                onDismissRequest = { showPlatformDialog = false },
+                title = { Text("Choose WhatsApp") },
+                text = { Text("Select which WhatsApp to use for this action.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pendingShareAction?.invoke(PlatformType.WHATSAPP)
+                        showPlatformDialog = false
+                    }) {
+                        Text("WhatsApp")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        pendingShareAction?.invoke(PlatformType.WHATSAPP_BUSINESS)
+                        showPlatformDialog = false
+                    }) {
+                        Text("Business")
                     }
                 }
             )

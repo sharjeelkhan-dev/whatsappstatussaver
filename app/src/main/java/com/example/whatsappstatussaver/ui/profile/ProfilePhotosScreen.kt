@@ -3,6 +3,7 @@ package com.example.whatsappstatussaver.ui.profile
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -39,6 +40,7 @@ import com.example.whatsappstatussaver.data.models.MediaType
 import com.example.whatsappstatussaver.data.models.PlatformType
 import com.example.whatsappstatussaver.data.models.StatusMedia
 import com.example.whatsappstatussaver.R
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val AppTeal = Color(0xFF00897B)
 
@@ -87,12 +89,20 @@ fun ProfilePhotosScreen(
             viewModel.checkPermissionAndLoad(it)
         },
         onNavigateBack = onNavigateBack,
-        onSaveSelected = { viewModel.saveSelectedMedia() },
-        onSaveSingle = { viewModel.saveMedia(it) },
+        onSaveSelected = {
+            viewModel.saveSelectedMedia()
+            Toast.makeText(context, "Saving selected photos...", Toast.LENGTH_SHORT).show()
+        },
+        onSaveSingle = {
+            viewModel.saveMedia(it)
+            Toast.makeText(context, "Photo saved to gallery!", Toast.LENGTH_SHORT).show()
+        },
         onToggleSelection = { viewModel.toggleSelection(it.uri.toString()) },
         onNavigateToViewer = onNavigateToViewer,
         onGrantPermission = {
             val authority = "com.android.externalstorage.documents"
+            
+            // Updated deep paths to point directly to the Profile Photos directory
             val documentId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
                 "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media/WhatsApp Profile Photos"
             } else {
@@ -103,6 +113,7 @@ fun ProfilePhotosScreen(
             try {
                 launcher.launch(initialHintUri)
             } catch (e: Exception) {
+                // Fallback 1: Media directory
                 try {
                     val mediaFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
                         "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media"
@@ -111,6 +122,7 @@ fun ProfilePhotosScreen(
                     }
                     launcher.launch(DocumentsContract.buildDocumentUri(authority, mediaFallbackId))
                 } catch (e2: Exception) {
+                    // Fallback 2: Package root
                     try {
                         val pkgFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
                             "primary:Android/media/com.whatsapp.w4b"
@@ -119,7 +131,7 @@ fun ProfilePhotosScreen(
                         }
                         launcher.launch(DocumentsContract.buildDocumentUri(authority, pkgFallbackId))
                     } catch (e3: Exception) {
-                        launcher.launch(null)
+                        launcher.launch(null) // System default
                     }
                 }
             }
@@ -238,7 +250,7 @@ fun ProfilePhotosScreenContent(
                     )
                 } else if (uiState.photos.isEmpty()) {
                     EmptyState(
-                        message = "No Profile Photos found.\nOpen profile photos in WhatsApp to load them here.",
+                        message = "No Profile Photos found",
                         buttonText = "Refresh",
                         onRefresh = onRefresh
                     )
@@ -435,7 +447,20 @@ fun EmptyState(
             shape = RoundedCornerShape(24.dp),
             modifier = Modifier.height(44.dp).padding(horizontal = 32.dp)
         ) {
-            Text(buttonText, fontWeight = FontWeight.Bold)
+            Text(buttonText,
+                fontWeight = FontWeight.Bold)
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EmptyStatePreview() {
+    WhatsAppStatusSaverTheme {
+        EmptyState(
+            message = "No Profile Photos found.",
+            buttonText = "Refresh",
+            onRefresh = {}
+        )
     }
 }

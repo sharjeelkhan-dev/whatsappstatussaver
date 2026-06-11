@@ -24,6 +24,7 @@ sealed class Screen(val route: String) {
     object Reminder : Screen("reminder")
     object Settings : Screen("settings")
     object ProfilePhotos : Screen("profile_photos")
+    object Splash : Screen("splash")
 
     object MediaViewer : Screen("viewer?uri={uri}&type={type}&name={name}&platform={platform}") {
         fun createRoute(uri: String, type: MediaType, name: String, platform: PlatformType): String {
@@ -44,9 +45,18 @@ fun WhatsAppStatusSaverNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Splash.route,
         modifier = modifier
     ) {
+        composable(Screen.Splash.route) {
+            com.example.whatsappstatussaver.ui.splash.SplashScreen(
+                onSplashScreenFinished = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Home.route) {
             com.example.whatsappstatussaver.ui.home.HomeScreen(
                 onNavigateToStatus = { platform -> navController.navigate(Screen.Status.createRoute(platform)) },
