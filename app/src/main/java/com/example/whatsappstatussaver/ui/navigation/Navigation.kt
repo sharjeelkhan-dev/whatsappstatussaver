@@ -23,7 +23,6 @@ sealed class Screen(val route: String) {
     object SavedFiles : Screen("saved_files")
     object Reminder : Screen("reminder")
     object Settings : Screen("settings")
-    object ProfilePhotos : Screen("profile_photos")
     object Splash : Screen("splash")
 
     object MediaViewer : Screen("viewer?uri={uri}&type={type}&name={name}&platform={platform}") {
@@ -63,8 +62,7 @@ fun WhatsAppStatusSaverNavHost(
                 onNavigateToDirectChat = { navController.navigate(Screen.DirectChat.route) },
                 onNavigateToSavedFiles = { navController.navigate(Screen.SavedFiles.route) },
                 onNavigateToReminder = { navController.navigate(Screen.Reminder.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
-                onNavigateToProfilePhotos = { navController.navigate(Screen.ProfilePhotos.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
         composable(
@@ -83,15 +81,6 @@ fun WhatsAppStatusSaverNavHost(
         }
         composable(Screen.DirectChat.route) {
             com.example.whatsappstatussaver.ui.chat.DirectChatScreen(onNavigateBack = { navController.popBackStack() })
-        }
-        composable(Screen.ProfilePhotos.route) {
-            com.example.whatsappstatussaver.ui.profile.ProfilePhotosScreen(
-                initialPlatform = PlatformType.WHATSAPP,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToViewer = { uri, type, name ->
-                    navController.navigate(Screen.MediaViewer.createRoute(uri, type, name, PlatformType.WHATSAPP))
-                }
-            )
         }
         composable(Screen.SavedFiles.route) {
             com.example.whatsappstatussaver.ui.saved.SavedFilesScreen(
@@ -141,9 +130,11 @@ fun WhatsAppStatusSaverNavHost(
             )
 
             val viewerViewModel: com.example.whatsappstatussaver.ui.saved.SavedFilesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+            val statusViewModel: com.example.whatsappstatussaver.ui.status.StatusViewModel = androidx.hilt.navigation.compose.hiltViewModel()
             com.example.whatsappstatussaver.ui.viewer.MediaViewerScreen(
                 statusMedia = statusMedia,
                 onNavigateBack = { navController.popBackStack() },
+                onSaveMedia = { media -> statusViewModel.saveMedia(media) },
                 onTagUpdate = { tags -> viewerViewModel.updateTags(statusMedia, tags) },
                 onCompressVideo = { uri -> viewerViewModel.compressVideo(uri) }
             )

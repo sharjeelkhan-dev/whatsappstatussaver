@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesomeMotion
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -29,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -37,7 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -47,10 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.models.PlatformType
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val AppTeal = Color(0xFF00897B)
-private val GradientStart = Color(0xFF00897B)
-private val GradientEnd = Color(0xFF00695C)
 private val LightTeal = Color(0xFFE0F2F1)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,49 +57,51 @@ fun HomeScreen(
     onNavigateToSavedFiles: () -> Unit,
     onNavigateToReminder: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToProfilePhotos: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         topBar = {
-            Surface(shadowElevation = 4.dp) {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                "Status Saver",
-                                modifier = modifier.offset(y = 10.dp),
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 22.sp,
-                                color = AppTeal
-                            )
-                            Text(
-                                "All-in-one downloader",
-                                modifier = modifier.offset(y = 6.dp),
-                                fontSize = 12.sp,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = onNavigateToSettings,
-                            modifier = Modifier
-                                .padding(end = 8.dp)
-                                .background(LightTeal, CircleShape)
-                                .size(40.dp)
-                        ) {
-                            Icon(Icons.Default.Settings,
-                                contentDescription = "Settings",
-                                tint = AppTeal,
-                                modifier = Modifier.size(20.dp))
-                        }
-                    },
-                    colors = TopAppBarDefaults
-                        .topAppBarColors(containerColor = Color.White)
-                )
-            }
+            TopAppBar(
+                title = {
+                    Column(
+                        modifier = Modifier.padding(start = 4.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            "Status Saver",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 22.sp,
+                            color = AppTeal
+                        )
+                        Text(
+                            "All-in-one downloader",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .background(LightTeal, CircleShape)
+                            .size(40.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = AppTeal,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                ),
+                modifier = Modifier.shadow(4.dp)
+            )
         },
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
@@ -124,7 +122,6 @@ fun HomeScreen(
                     fontSize = 18.sp,
                     color = Color(0xFF263238)
                 )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -171,59 +168,6 @@ fun HomeScreen(
                     icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
                     onClick = onNavigateToReminder
                 )
-            }
-
-            // Special Feature Card
-            Card(
-                onClick = onNavigateToProfilePhotos,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(GradientStart, GradientEnd)
-                            )
-                        )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.AccountCircle,
-                                contentDescription = null,
-                                tint = Color.White)
-                        }
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Profile Photos", color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp)
-                            Text("Download DP in high quality",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp)
-                        }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp))
-                    }
-                }
             }
         }
     }
@@ -316,9 +260,8 @@ fun ModernToolCard(title: String, subtitle: String,
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    MaterialTheme {
+    WhatsAppStatusSaverTheme {
         HomeScreen({},
-            {},
             {},
             {},
             {},

@@ -1,38 +1,70 @@
 @file:kotlin.OptIn(ExperimentalMaterial3Api::class)
 
 package com.example.whatsappstatussaver.ui.viewer
-
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Reply
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -41,11 +73,43 @@ import coil.compose.AsyncImage
 import com.example.whatsappstatussaver.data.models.MediaType
 import com.example.whatsappstatussaver.data.models.PlatformType
 import com.example.whatsappstatussaver.data.models.StatusMedia
-import com.example.whatsappstatussaver.ui.status.StatusViewModel
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 import kotlinx.coroutines.launch
 import java.io.File
 
 private val AppTeal = Color(0xFF00897B)
+
+private fun copyUriToCache(context: Context, uri: Uri): Uri {
+    Log.d("MediaViewer", "Copying URI to cache: $uri")
+    return try {
+        if (uri.scheme == "content") {
+            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(context.contentResolver.getType(uri)) ?: "bin"
+            val tempFile = File(context.cacheDir, "share_temp_${System.currentTimeMillis()}.$extension")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            val providerUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+            Log.d("MediaViewer", "Content URI cached to: $providerUri")
+            providerUri
+        } else {
+            val path = uri.path ?: uri.toString()
+            val file = if (uri.scheme == "file") File(uri.path ?: "") else File(path)
+            if (file.exists()) {
+                val providerUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                Log.d("MediaViewer", "File URI converted to: $providerUri")
+                providerUri
+            } else {
+                Log.w("MediaViewer", "File does not exist: $path")
+                uri
+            }
+        }
+    } catch (e: Exception) {
+        Log.e("MediaViewer", "Error copying uri to cache: ${e.message}", e)
+        uri
+    }
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,10 +117,10 @@ private val AppTeal = Color(0xFF00897B)
 fun MediaViewerScreen(
     statusMedia: StatusMedia,
     onNavigateBack: () -> Unit,
+    onSaveMedia: (StatusMedia) -> Unit,
     onTagUpdate: ((String) -> Unit)? = null,
     onCompressVideo: (suspend (android.net.Uri) -> android.net.Uri?)? = null,
-    modifier: Modifier = Modifier,
-    viewModel: StatusViewModel = hiltViewModel()
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -90,9 +154,10 @@ fun MediaViewerScreen(
             else -> Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
         }
     }
+    val isInspectionMode = LocalInspectionMode.current
     val exoPlayer = remember(statusMedia.uri) {
-        ExoPlayer.Builder(context).build().apply {
-            if (statusMedia.type == MediaType.VIDEO) {
+        if (statusMedia.type == MediaType.VIDEO && !isInspectionMode) {
+            ExoPlayer.Builder(context).build().apply {
                 // Better MIME detection for SAF/MediaStore URIs
                 val mimeType = if (statusMedia.uri.scheme == "content") {
                     context.contentResolver.getType(statusMedia.uri) ?: "video/mp4"
@@ -110,12 +175,14 @@ fun MediaViewerScreen(
                 playWhenReady = true
                 repeatMode = Player.REPEAT_MODE_ONE
             }
+        } else {
+            null
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(exoPlayer) {
         onDispose {
-            exoPlayer.release()
+            exoPlayer?.release()
         }
     }
 
@@ -155,6 +222,7 @@ fun MediaViewerScreen(
                 // WhatsApp Share Button (Direct Message)
                 IconButton(
                     onClick = {
+                        Toast.makeText(context, "WhatsApp Clicked", Toast.LENGTH_SHORT).show()
                         val shareAction: (PlatformType) -> Unit = { platform ->
                             coroutineScope.launch {
                                 val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
@@ -166,10 +234,8 @@ fun MediaViewerScreen(
                                         isCompressing = false
                                     }
 
-                                    val contentUri = if (finalUri.scheme == "file") {
-                                        val file = File(finalUri.path ?: "")
-                                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                    } else finalUri
+                                    val contentUri = copyUriToCache(context, finalUri)
+                                    Log.d("MediaViewer", "Sharing to WhatsApp ($packageName): $contentUri")
 
                                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                         type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
@@ -180,11 +246,12 @@ fun MediaViewerScreen(
                                     context.startActivity(shareIntent)
                                 } catch (e: Exception) {
                                     isCompressing = false
-                                    Toast.makeText(context, "Share failed", Toast.LENGTH_SHORT).show()
+                                    Log.e("MediaViewer", "WhatsApp Share failed: ${e.message}", e)
+                                    Toast.makeText(context, "Share failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                                 }
                             }
                         }
-                        checkAndShare(shareAction)
+                        coroutineScope.launch { checkAndShare(shareAction) }
                     },
                     modifier = Modifier
                         .size(56.dp)
@@ -196,6 +263,7 @@ fun MediaViewerScreen(
                 // General Share Button
                 IconButton(
                     onClick = {
+                        Toast.makeText(context, "Share Clicked", Toast.LENGTH_SHORT).show()
                         coroutineScope.launch {
                             try {
                                 var finalUri = statusMedia.uri
@@ -205,10 +273,8 @@ fun MediaViewerScreen(
                                     isCompressing = false
                                 }
 
-                                val contentUri = if (finalUri.scheme == "file") {
-                                    val file = File(finalUri.path ?: "")
-                                    FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                } else finalUri
+                                val contentUri = copyUriToCache(context, finalUri)
+                                Log.d("MediaViewer", "General Share: $contentUri")
 
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
@@ -218,7 +284,8 @@ fun MediaViewerScreen(
                                 context.startActivity(Intent.createChooser(shareIntent, "Share Media"))
                             } catch (e: Exception) {
                                 isCompressing = false
-                                Toast.makeText(context, "Failed to share", Toast.LENGTH_SHORT).show()
+                                Log.e("MediaViewer", "General Share failed: ${e.message}", e)
+                                Toast.makeText(context, "Failed to share: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -232,57 +299,20 @@ fun MediaViewerScreen(
                 // Save Button
                 IconButton(
                     onClick = {
-                        viewModel.saveMedia(statusMedia)
-                        Toast.makeText(context, "Saved Successfully!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Save Clicked", Toast.LENGTH_SHORT).show()
+                        try {
+                            onSaveMedia(statusMedia)
+                            Toast.makeText(context, "Media saved!", Toast.LENGTH_SHORT).show()
+                        } catch (e: Exception) {
+                            Log.e("MediaViewer", "Save failed: ${e.message}", e)
+                            Toast.makeText(context, "Save failed: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .size(56.dp)
                         .background(AppTeal, CircleShape)
                 ) {
                     Icon(Icons.Default.Download, contentDescription = "Download", tint = Color.White)
-                }
-
-                // Repost Button
-                IconButton(
-                    onClick = {
-                        val repostAction: (PlatformType) -> Unit = { platform ->
-                            coroutineScope.launch {
-                                val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
-                                try {
-                                    var finalUri = statusMedia.uri
-                                    if (statusMedia.type == MediaType.VIDEO && onCompressVideo != null) {
-                                        isCompressing = true
-                                        onCompressVideo(statusMedia.uri)?.let { finalUri = it }
-                                        isCompressing = false
-                                    }
-
-                                    val contentUri = if (finalUri.scheme == "file") {
-                                        val file = File(finalUri.path ?: "")
-                                        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                                    } else finalUri
-
-                                    // For reposting, we often want to target the status specifically
-                                    // but ACTION_SEND with package is usually sufficient.
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = if (statusMedia.type == MediaType.VIDEO) "video/*" else "image/*"
-                                        putExtra(Intent.EXTRA_STREAM, contentUri)
-                                        setPackage(packageName)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(shareIntent)
-                                } catch (e: Exception) {
-                                    isCompressing = false
-                                    Toast.makeText(context, "Repost failed", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                        checkAndShare(repostAction)
-                    },
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(AppTeal, CircleShape)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Reply, contentDescription = "Repost", tint = Color.White)
                 }
             }
         },
@@ -296,16 +326,32 @@ fun MediaViewerScreen(
             contentAlignment = Alignment.Center
         ) {
             if (statusMedia.type == MediaType.VIDEO) {
-                AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            player = exoPlayer
-                            useController = true
-                            setBackgroundColor(android.graphics.Color.BLACK)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                if (isInspectionMode) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.DarkGray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.PlayCircle,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                } else {
+                    AndroidView(
+                        factory = { ctx ->
+                            PlayerView(ctx).apply {
+                                player = exoPlayer
+                                useController = true
+                                setBackgroundColor(android.graphics.Color.BLACK)
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             } else {
                 var scale by remember { mutableStateOf(1f) }
                 var offset by remember { mutableStateOf(Offset.Zero) }
@@ -411,20 +457,42 @@ fun MediaViewerScreen(
 
 @OptIn(UnstableApi::class)
 @ExperimentalMaterial3Api
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Photo Viewer")
 @Composable
-fun MediaViewerScreenPreview() {
-    MaterialTheme {
+fun MediaViewerScreenPhotoPreview() {
+    WhatsAppStatusSaverTheme {
         MediaViewerScreen(
             statusMedia = StatusMedia(
-                uri = android.net.Uri.EMPTY,
-                name = "Sample Media",
+                uri = Uri.EMPTY,
+                name = "Sample Photo",
                 type = MediaType.IMAGE,
                 size = 1024,
                 dateModified = System.currentTimeMillis(),
                 platform = PlatformType.WHATSAPP
             ),
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onSaveMedia = {}
+        )
+    }
+}
+
+@OptIn(UnstableApi::class)
+@ExperimentalMaterial3Api
+@Preview(showBackground = true, name = "Video Viewer")
+@Composable
+fun MediaViewerScreenVideoPreview() {
+    WhatsAppStatusSaverTheme {
+        MediaViewerScreen(
+            statusMedia = StatusMedia(
+                uri = Uri.EMPTY,
+                name = "Sample Video",
+                type = MediaType.VIDEO,
+                size = 1024,
+                dateModified = System.currentTimeMillis(),
+                platform = PlatformType.WHATSAPP
+            ),
+            onNavigateBack = {},
+            onSaveMedia = {}
         )
     }
 }

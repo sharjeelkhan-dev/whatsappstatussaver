@@ -105,9 +105,15 @@ class StatusViewModel @Inject constructor(
 
     fun saveMedia(statusMedia: StatusMedia) {
         viewModelScope.launch {
-            val success = repository.saveStatus(statusMedia)
-            if (success) {
-                notifier.showDownloadComplete(1)
+            try {
+                val success = repository.saveStatus(statusMedia)
+                if (success) {
+                    notifier.showDownloadComplete(1)
+                } else {
+                    // This could be shown via a state flow or a one-time event if needed
+                }
+            } catch (e: Exception) {
+                // handle error
             }
         }
     }

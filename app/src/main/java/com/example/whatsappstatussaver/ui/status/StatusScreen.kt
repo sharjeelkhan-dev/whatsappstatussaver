@@ -3,24 +3,63 @@ package com.example.whatsappstatussaver.ui.status
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FolderSpecial
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,13 +74,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
 import coil.request.videoFrameMillis
+import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.models.MediaType
 import com.example.whatsappstatussaver.data.models.PlatformType
 import com.example.whatsappstatussaver.data.models.StatusMedia
-import com.example.whatsappstatussaver.R
 
 private val AppTeal = Color(0xFF00897B)
 
@@ -412,40 +451,53 @@ fun MediaItem(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFE0E0E0))
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onToggleSelection
-            )
     ) {
-        if (media.type == MediaType.VIDEO) {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(media.uri)
-                    .decoderFactory(VideoFrameDecoder.Factory())
-                    .videoFrameMillis(1000) // Apply the 1s fix for WhatsApp & Business
-                    .crossfade(true)
-                    .size(512)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(if (isSelected) 4.dp else 8.dp)),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data(media.uri)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(if (isSelected) 4.dp else 8.dp)),
-                contentScale = ContentScale.Crop
-            )
+        // Main Image/Video Content
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onToggleSelection
+                )
+        ) {
+            if (media.type == MediaType.VIDEO) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(media.uri)
+                        .decoderFactory(VideoFrameDecoder.Factory())
+                        .videoFrameMillis(1000)
+                        .crossfade(true)
+                        .size(512)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                Icon(
+                    Icons.Default.PlayCircle,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.size(36.dp).align(Alignment.Center)
+                )
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(media.uri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
 
         if (isSelected) {
@@ -453,6 +505,7 @@ fun MediaItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.3f))
+                    .clickable { onToggleSelection() }
             )
             Icon(
                 Icons.Default.CheckCircle,
@@ -463,32 +516,31 @@ fun MediaItem(
                     .padding(8.dp)
             )
         } else {
-            if (media.type == MediaType.VIDEO) {
-                Icon(
-                    Icons.Default.PlayCircle,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.Center)
-                )
-            }
-
             if (!isMultiSelectMode) {
-                IconButton(
-                    onClick = onSave,
+                Row(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                        .background(Color.Black.copy(alpha = 0.3f), CircleShape)
-                        .size(28.dp)
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.import_icon),
-                        contentDescription = "Save",
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    // Quick Save Button
+                    IconButton(
+                        onClick = {
+                            Log.d("StatusScreen", "Grid Save Clicked")
+                            Toast.makeText(context, "Saving...", Toast.LENGTH_SHORT).show()
+                            onSave()
+                        },
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.import_icon),
+                            contentDescription = "Save",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
         }
