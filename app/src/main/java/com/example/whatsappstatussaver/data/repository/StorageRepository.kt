@@ -6,7 +6,6 @@ import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
@@ -81,38 +80,25 @@ class StorageRepository @Inject constructor(
         return folder
     }
 
-    private fun cacheStatusFileFromUri(fileUri: Uri, name: String, platform: PlatformType) {
-        try {
-            val cacheFolder = getCacheFolder(platform)
-            val destFile = File(cacheFolder, name)
-
-            context.contentResolver.openInputStream(fileUri)?.use { input ->
-                FileOutputStream(destFile).use { output ->
-                    input.copyTo(output)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("StorageRepo", "Caching failed for file: $name", e)
-        }
-    }
-
     suspend fun getStatuses(platform: PlatformType): Pair<List<StatusMedia>, String> = withContext(Dispatchers.IO) {
         val statuses = mutableListOf<StatusMedia>()
         val persistedPermissions = context.contentResolver.persistedUriPermissions
         var debugMsg = "No folder access for ${platform.name}. Please grant permission."
-        val activeStatusNames = mutableSetOf<String>()
         var folderFound = false
 
-        // Strategy 1: Systematic search across all relevant permissions
         val platformPermissions = persistedPermissions.filter {
             it.isReadPermission && isUriRelevantForFolder(it.uri.toString(), platform, forProfilePhotos = false)
         }
 
         platformPermissions.forEach { permission ->
-            // Try Direct ID Query first (FAST)
-            val directLoaded = tryDirectIdQuery(permission.uri, platform, activeStatusNames)
+            // Try Direct ID Query first (FAST & No Caching)
+            val directItems = tryDirectIdQueryEnhanced(permission.uri, platform)
+            if (directItems.isNotEmpty()) {
+                statuses.addAll(directItems)
+                folderFound = true
+            }
             
-            // Even if direct loaded, some files might be missing from direct ID, so we also traverse
+            // Traversal fallback for items missed by direct query
             try {
                 val root = DocumentFile.fromTreeUri(context, permission.uri)
                 if (root != null) {
@@ -123,10 +109,20 @@ class StorageRepository @Inject constructor(
                             folder.listFiles().forEach { file ->
                                 val name = file.name
                                 if (!name.isNullOrEmpty() && !name.endsWith(".nomedia") && isMediaFile(name)) {
-                                    if (!activeStatusNames.contains(name)) {
-                                        activeStatusNames.add(name)
-                                        cacheStatusFileFromUri(file.uri, name, platform)
-                                    }
+                                    val fileName = name.lowercase()
+                                    val mediaType = if (fileName.endsWith(".mp4") || fileName.endsWith(".mkv") || fileName.endsWith(".3gp") || fileName.endsWith(".avi") ||
+                                        fileName.endsWith(".mov") || fileName.endsWith(".wmv") || fileName.endsWith(".flv") || fileName.endsWith(".webm")) MediaType.VIDEO else MediaType.IMAGE
+                                    
+                                    statuses.add(
+                                        StatusMedia(
+                                            uri = file.uri,
+                                            name = name,
+                                            type = mediaType,
+                                            size = file.length(),
+                                            dateModified = file.lastModified(),
+                                            platform = platform
+                                        )
+                                    )
                                 }
                             }
                         }
@@ -135,44 +131,76 @@ class StorageRepository @Inject constructor(
             } catch (e: Exception) {
                 Log.e("StorageRepo", "Tree traversal error", e)
             }
-            if (directLoaded) folderFound = true
         }
 
-        if (folderFound) {
+        if (folderFound || statuses.isNotEmpty()) {
             debugMsg = "Success: Loaded items for ${platform.name}."
-        }
-
-        // Process cached elements and strictly CLEANUP stale data
-        val cacheFolder = getCacheFolder(platform)
-        cacheFolder.listFiles()?.forEach { file ->
-            if (folderFound && !activeStatusNames.contains(file.name)) {
-                file.delete()
-                return@forEach
-            }
-
-            val fileName = file.name.lowercase()
-            val mediaType = when {
-                fileName.endsWith(".mp4") || fileName.endsWith(".mkv") || fileName.endsWith(".3gp") || fileName.endsWith(".avi") -> MediaType.VIDEO
-                fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png") || fileName.endsWith(".webp") -> MediaType.IMAGE
-                else -> null
-            }
-
-            if (mediaType != null) {
-                statuses.add(
-                    StatusMedia(
-                        uri = Uri.fromFile(file),
-                        name = file.name,
-                        type = mediaType,
-                        size = file.length(),
-                        dateModified = file.lastModified(),
-                        platform = platform
-                    )
-                )
-            }
         }
 
         val finalStatuses = statuses.distinctBy { it.name }.sortedByDescending { it.dateModified }
         Pair(finalStatuses, debugMsg)
+    }
+
+    private fun tryDirectIdQueryEnhanced(treeUri: Uri, platform: PlatformType): List<StatusMedia> {
+        val items = mutableListOf<StatusMedia>()
+        try {
+            val treeId = DocumentsContract.getTreeDocumentId(treeUri) ?: return emptyList()
+            val volumePrefix = if (treeId.contains(":")) treeId.substringBefore(":") + ":" else "primary:"
+
+            val targetId = if (platform == PlatformType.WHATSAPP) {
+                "${volumePrefix}Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
+            } else {
+                "${volumePrefix}Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
+            }
+
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, targetId)
+
+            context.contentResolver.query(
+                childrenUri,
+                arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_SIZE,
+                    DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+                    DocumentsContract.Document.COLUMN_MIME_TYPE
+                ),
+                null, null, null
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                val nameCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                val sizeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_SIZE)
+                val dateCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+
+                while (cursor.moveToNext()) {
+                    val id = cursor.getString(idCol)
+                    val name = cursor.getString(nameCol)
+                    val size = cursor.getLong(sizeCol)
+                    val date = cursor.getLong(dateCol)
+                    val mime = cursor.getString(mimeCol) ?: ""
+
+                    if (!id.isNullOrEmpty() && !name.isNullOrEmpty() && isMediaFile(name)) {
+                        val type = if (mime.startsWith("video") || name.lowercase().let { 
+                            it.endsWith(".mp4") || it.endsWith(".mkv") || it.endsWith(".3gp") || it.endsWith(".mov") 
+                        }) MediaType.VIDEO else MediaType.IMAGE
+                        
+                        items.add(
+                            StatusMedia(
+                                uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id),
+                                name = name,
+                                type = type,
+                                size = size,
+                                dateModified = date,
+                                platform = platform
+                            )
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("StorageRepo", "Direct query failed", e)
+        }
+        return items
     }
 
     private fun resolveAllPossibleStatusFolders(root: DocumentFile, platform: PlatformType): List<DocumentFile> {
@@ -222,46 +250,8 @@ class StorageRepository @Inject constructor(
     private fun isMediaFile(name: String): Boolean {
         val n = name.lowercase()
         return n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp") ||
-                n.endsWith(".mp4") || n.endsWith(".mkv") || n.endsWith(".3gp") || n.endsWith(".avi")
-    }
-
-    private fun tryDirectIdQuery(treeUri: Uri, platform: PlatformType, activeNames: MutableSet<String>): Boolean {
-        try {
-            val treeId = DocumentsContract.getTreeDocumentId(treeUri) ?: return false
-            val volumePrefix = if (treeId.contains(":")) treeId.substringBefore(":") + ":" else "primary:"
-
-            val targetId = if (platform == PlatformType.WHATSAPP) {
-                "${volumePrefix}Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
-            } else {
-                "${volumePrefix}Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
-            }
-
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, targetId)
-            var found = false
-
-            context.contentResolver.query(
-                childrenUri,
-                arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME),
-                null, null, null
-            )?.use { cursor ->
-                val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-                val nameCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-                while (cursor.moveToNext()) {
-                    val id = cursor.getString(idCol)
-                    val name = cursor.getString(nameCol)
-                    if (!id.isNullOrEmpty() && !name.isNullOrEmpty() && isMediaFile(name)) {
-                        if (!activeNames.contains(name)) {
-                            activeNames.add(name)
-                            cacheStatusFileFromUri(DocumentsContract.buildDocumentUriUsingTree(treeUri, id), name, platform)
-                            found = true
-                        }
-                    }
-                }
-            }
-            return found
-        } catch (e: Exception) {
-            return false
-        }
+                n.endsWith(".mp4") || n.endsWith(".mkv") || n.endsWith(".3gp") || n.endsWith(".avi") ||
+                n.endsWith(".mov") || n.endsWith(".wmv") || n.endsWith(".flv") || n.endsWith(".webm")
     }
 
     // [Profile Photo logic remains similar but optimized below...]
@@ -471,19 +461,43 @@ class StorageRepository @Inject constructor(
 
     suspend fun deleteSavedFile(statusMedia: StatusMedia): Boolean = withContext(Dispatchers.IO) {
         try {
-            if (statusMedia.uri.scheme == "file") {
-                val file = File(statusMedia.uri.path ?: "")
-                if (file.exists()) file.delete()
-            } else {
-                context.contentResolver.delete(statusMedia.uri, null, null)
-            }
-            savedMediaDao.getMediaByName(statusMedia.name)?.let { savedMediaDao.deleteMedia(it) }
-            true
-        } catch (e: Exception) { false }
-    }
+            val uri = statusMedia.uri
+            Log.d("StorageRepo", "Deleting file: ${statusMedia.name}, URI: $uri")
 
-    suspend fun updateTags(media: StatusMedia, tags: String) = withContext(Dispatchers.IO) {
-        savedMediaDao.getMediaByName(media.name)?.let { savedMediaDao.updateTags(it.id, tags) }
+            // 1. Attempt to delete the physical file/content entry
+            try {
+                when (uri.scheme) {
+                    "file" -> {
+                        val file = File(uri.path ?: "")
+                        if (file.exists()) file.delete()
+                    }
+                    "content" -> {
+                        if (DocumentsContract.isDocumentUri(context, uri)) {
+                            // SAF Document URI
+                            val doc = DocumentFile.fromSingleUri(context, uri)
+                            if (doc != null && doc.exists()) doc.delete()
+                        } else {
+                            // MediaStore or other content URI
+                            context.contentResolver.delete(uri, null, null)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("StorageRepo", "Physical deletion failed: ${e.message}")
+            }
+
+            // 2. Always delete from local Database to keep UI clean
+            val entity = savedMediaDao.getMediaByName(statusMedia.name)
+            if (entity != null) {
+                savedMediaDao.deleteMedia(entity)
+                Log.d("StorageRepo", "Database record deleted for: ${statusMedia.name}")
+            }
+
+            true
+        } catch (e: Exception) {
+            Log.e("StorageRepo", "Error in deleteSavedFile: ${e.message}")
+            false
+        }
     }
 
     private fun findFolderRecursive(parent: DocumentFile, targetName: String, depth: Int): DocumentFile? {

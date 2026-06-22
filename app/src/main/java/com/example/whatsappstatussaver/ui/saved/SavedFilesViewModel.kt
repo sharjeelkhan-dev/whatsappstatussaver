@@ -18,8 +18,7 @@ data class SavedFilesUiState(
     val errorMessage: String? = null,
     val selectedMedia: Set<String> = emptySet(),
     val isMultiSelectMode: Boolean = false,
-    val searchQuery: String = ""
-)
+    val searchQuery: String = "")
 
 @HiltViewModel
 class SavedFilesViewModel @Inject constructor(
@@ -71,7 +70,6 @@ class SavedFilesViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SavedFilesUiState()
     )
-
     fun toggleSelection(mediaUri: String) {
         val currentSelection = _selectionState.value.first.toMutableSet()
         if (currentSelection.contains(mediaUri)) {
@@ -81,7 +79,6 @@ class SavedFilesViewModel @Inject constructor(
         }
         _selectionState.value = Pair(currentSelection, currentSelection.isNotEmpty())
     }
-
     fun clearSelection() {
         _selectionState.value = Pair(emptySet(), false)
     }
@@ -95,7 +92,6 @@ class SavedFilesViewModel @Inject constructor(
             repository.deleteSavedFile(media)
         }
     }
-
     fun deleteSelectedFiles() {
         viewModelScope.launch {
             val state = uiState.value
