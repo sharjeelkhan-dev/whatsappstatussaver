@@ -11,14 +11,38 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.whatsappstatussaver.MainActivity
 import com.example.whatsappstatussaver.R
+import com.example.whatsappstatussaver.data.repository.ReminderRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ReminderReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var repository: ReminderRepository
+
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("ReminderReceiver", "onReceive triggered with action: ${intent.action}")
+        Log.d("ReminderReceiver", "onReceive triggered")
         val title = intent.getStringExtra("REMINDER_TITLE") ?: "Status Saver Reminder"
         val reminderId = intent.getIntExtra("REMINDER_ID", 0)
 
         showNotification(context, title, "Time to check and save some new statuses!", reminderId)
+
+        // Reschedule if daily
+        val scope = CoroutineScope(Dispatchers.IO)
+        scope.launch {
+            val reminders = repository.getAllReminders().first()
+            val currentReminder = reminders.find { it.id == reminderId }
+            if (currentReminder != null && currentReminder.repeatType == "Daily" && currentReminder.isAlertEnabled && !currentReminder.isCompleted) {
+                // Important: scheduleAlarm already adds 1 day if time is in past, 
+                // so we just call it again to set it for tomorrow.
+                repository.scheduleAlarm(currentReminder)
+            }
+        }
     }
 
     private fun showNotification(context: Context, title: String, message: String, id: Int) {
@@ -40,10 +64,11 @@ class ReminderReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(R.drawable.ic_splash_logo) // Use splash logo or launcher icon
+            .setSmallIcon(R.mipmap.ic_launcher) // Use standard launcher icon for reliability
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()

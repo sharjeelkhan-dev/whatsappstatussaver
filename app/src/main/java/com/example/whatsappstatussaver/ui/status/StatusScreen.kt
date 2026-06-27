@@ -59,6 +59,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +97,7 @@ fun StatusScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var selectedPlatform by remember { mutableStateOf(initialPlatform) }
+    var selectedPlatform by rememberSaveable { mutableStateOf(initialPlatform) }
 
     // Storage Access Framework Launcher
     val launcher = rememberLauncherForActivityResult(
@@ -209,7 +210,7 @@ fun StatusScreenContent(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     val filteredStatuses = uiState.statuses.filter {
         if (selectedTab == 0) it.type == MediaType.IMAGE else it.type == MediaType.VIDEO

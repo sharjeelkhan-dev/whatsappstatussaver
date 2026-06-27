@@ -1,8 +1,16 @@
 package com.example.whatsappstatussaver.ui.reminder
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,52 +29,72 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.whatsappstatussaver.data.local.entity.ReminderEntity
 import java.text.SimpleDateFormat
 import java.util.*
+import com.example.whatsappstatussaver.R
 
 private val AppTeal = Color(0xFF00897B)
+
+enum class ReminderScreenType {
+    DASHBOARD,
+    LIST,
+    ADD
+}
 
 @Composable
 fun ReminderScreen(
     onNavigateBack: () -> Unit,
     viewModel: ReminderViewModel = hiltViewModel()
 ) {
-    var isAddingNew by remember { mutableStateOf(false) }
+    var currentScreen by remember { mutableStateOf(ReminderScreenType.DASHBOARD) }
     val reminders by viewModel.allReminders.collectAsState()
 
-    if (isAddingNew) {
-        AddReminderForm(
-            onCancel = { isAddingNew = false },
-            onAdd = { reminder ->
-                viewModel.addReminder(reminder)
-                isAddingNew = false
-            }
-        )
-    } else {
-        ReminderListScreen(
-            reminders = reminders,
-            onBack = onNavigateBack,
-            onAddNew = { isAddingNew = true },
-            onDelete = { viewModel.deleteReminder(it) }
-        )
+    when (currentScreen) {
+        ReminderScreenType.DASHBOARD -> {
+            ReminderDashboardScreen(
+                reminders = reminders,
+                onBack = onNavigateBack,
+                onNavigateToList = { currentScreen = ReminderScreenType.LIST },
+                onAddNew = { currentScreen = ReminderScreenType.ADD }
+            )
+        }
+        ReminderScreenType.LIST -> {
+            ReminderListScreen(
+                reminders = reminders,
+                onBack = { currentScreen = ReminderScreenType.DASHBOARD },
+                onAddNew = { currentScreen = ReminderScreenType.ADD },
+                onDelete = { viewModel.deleteReminder(it) },
+                onToggleCompletion = { viewModel.toggleReminderCompletion(it) }
+            )
+        }
+        ReminderScreenType.ADD -> {
+            AddReminderForm(
+                onCancel = { currentScreen = ReminderScreenType.DASHBOARD },
+                onAdd = { reminder ->
+                    viewModel.addReminder(reminder)
+                    currentScreen = ReminderScreenType.DASHBOARD
+                }
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReminderListScreen(
+fun ReminderDashboardScreen(
     reminders: List<ReminderEntity>,
     onBack: () -> Unit,
-    onAddNew: () -> Unit,
-    onDelete: (ReminderEntity) -> Unit
+    onNavigateToList: () -> Unit,
+    onAddNew: () -> Unit
 ) {
     val todayRemindersCount = reminders.count {
         val cal = Calendar.getInstance()
@@ -74,8 +102,6 @@ fun ReminderListScreen(
         cal.get(Calendar.YEAR) == reminderCal.get(Calendar.YEAR) &&
                 cal.get(Calendar.DAY_OF_YEAR) == reminderCal.get(Calendar.DAY_OF_YEAR)
     }
-    
-    val scheduledCount = reminders.size
 
     Scaffold(
         topBar = {
@@ -90,7 +116,12 @@ fun ReminderListScreen(
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFFE0F2F1))
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AppTeal, modifier = Modifier.size(18.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = AppTeal,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -112,7 +143,6 @@ fun ReminderListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -129,7 +159,7 @@ fun ReminderListScreen(
                 )
                 ReminderStatCard(
                     title = "Scheduled",
-                    count = scheduledCount,
+                    count = reminders.size,
                     icon = Icons.Default.Event,
                     modifier = Modifier.weight(1f)
                 )
@@ -143,12 +173,12 @@ fun ReminderListScreen(
                     fontSize = 18.sp,
                     color = Color(0xFF263238)
                 )
-                
+
                 ReminderListItem(
                     title = "Reminders",
                     count = reminders.size,
                     icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                    onClick = { /* Could navigate to detailed list if needed */ }
+                    onClick = onNavigateToList
                 )
             }
         }
@@ -159,18 +189,18 @@ fun ReminderListScreen(
 fun ReminderStatCard(
     title: String,
     count: Int,
-    icon: ImageVector,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(100.dp),
+        modifier = modifier.height(110.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F7F7))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1).copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
@@ -180,16 +210,16 @@ fun ReminderStatCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
                         .background(AppTeal),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Text(
                     text = count.toString(),
-                    fontSize = 28.sp,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF263238)
                 )
@@ -197,7 +227,7 @@ fun ReminderStatCard(
             Text(
                 text = title,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 color = Color.Gray
             )
         }
@@ -208,7 +238,7 @@ fun ReminderStatCard(
 fun ReminderListItem(
     title: String,
     count: Int,
-    icon: ImageVector,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
     Card(
@@ -256,32 +286,210 @@ fun ReminderListItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReminderItem(reminder: ReminderEntity, onDelete: () -> Unit) {
-    val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
-    val dateFormatter = SimpleDateFormat("MMM dd", Locale.getDefault())
-    
+fun ReminderListScreen(
+    reminders: List<ReminderEntity>,
+    onBack: () -> Unit,
+    onAddNew: () -> Unit,
+    onDelete: (ReminderEntity) -> Unit,
+    onToggleCompletion: (ReminderEntity) -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredReminders = reminders.filter {
+        it.title.contains(searchQuery, ignoreCase = true) ||
+                it.description.contains(searchQuery, ignoreCase = true)
+    }
+
+    val incompleteCount = filteredReminders.count { !it.isCompleted }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Reminder List", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFE0F2F1))
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowBackIosNew,
+                            contentDescription = "Back",
+                            tint = AppTeal,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddNew,
+                containerColor = AppTeal,
+                contentColor = Color.White,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Reminder")
+            }
+        },
+        containerColor = Color.White
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp)
+        ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "You have got $incompleteCount tasks to complete",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Search Task Here", color = Color.Gray) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.LightGray,
+                    unfocusedBorderColor = Color.LightGray,
+                    cursorColor = AppTeal
+                ),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (filteredReminders.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No reminders found", color = Color.Gray)
+                }
+            } else {
+                val grouped = filteredReminders.groupBy {
+                    val cal = Calendar.getInstance().apply { timeInMillis = it.date }
+                    val now = Calendar.getInstance()
+                    if (cal.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                        cal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+                    ) "Today" else "Upcoming"
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    grouped.forEach { (header, list) ->
+                        Text(
+                            text = header,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+
+                        list.forEach { reminder ->
+                            ReminderItem(
+                                reminder = reminder,
+                                onToggle = { onToggleCompletion(reminder) },
+                                onDelete = { onDelete(reminder) }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(80.dp)) // FAB space
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderItem(
+    reminder: ReminderEntity,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9F9)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(reminder.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            // Left Teal Stripe
+            Box(
+                modifier = Modifier
+                    .width(12.dp)
+                    .fillMaxHeight()
+                    .background(AppTeal)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "${dateFormatter.format(Date(reminder.date))} at ${timeFormatter.format(Date(reminder.time))}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    text = reminder.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = dateFormatter.format(Date(reminder.date)),
+                        fontSize = 13.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            // Radio/Checkbox Circle
+            IconButton(onClick = onToggle) {
+                Icon(
+                    imageVector = if (reminder.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = "Toggle Complete",
+                    tint = if (reminder.isCompleted) AppTeal else Color.LightGray,
+                    modifier = Modifier.size(28.dp)
                 )
             }
+            
+            // Delete button (Optional but useful)
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(alpha = 0.6f))
+                Icon( painter = painterResource(id = R.drawable.recycle_bin_icon),
+                    contentDescription = "Delete",
+                    tint = Color.Red.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp))
             }
+
+            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 }
@@ -519,10 +727,54 @@ fun PriorityButton(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Reminder Dashboard")
 @Composable
-fun ReminderScreenPreview() {
+fun ReminderDashboardPreview() {
     MaterialTheme {
-        ReminderScreen(onNavigateBack = {})
+        ReminderDashboardScreen(
+            reminders = listOf(
+                ReminderEntity(id = 1, title = "Task 1", description = "", date = 0, time = 0, repeatType = "", priority = "", isAlertEnabled = true)
+            ),
+            onBack = {},
+            onNavigateToList = {},
+            onAddNew = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Reminder List")
+@Composable
+fun ReminderListPreview() {
+    MaterialTheme {
+        ReminderListScreen(
+            reminders = listOf(
+                ReminderEntity(
+                    id = 1,
+                    title = "Check Status",
+                    description = "Description",
+                    date = System.currentTimeMillis(),
+                    time = System.currentTimeMillis(),
+                    repeatType = "Daily",
+                    priority = "High",
+                    isAlertEnabled = true,
+                    isCompleted = false
+                ),
+                ReminderEntity(
+                    id = 2,
+                    title = "Update Story",
+                    description = "Description",
+                    date = System.currentTimeMillis(),
+                    time = System.currentTimeMillis(),
+                    repeatType = "None",
+                    priority = "Medium",
+                    isAlertEnabled = true,
+                    isCompleted = true
+                )
+            ),
+            onBack = {},
+            onAddNew = {},
+            onDelete = {},
+            onToggleCompletion = {}
+        )
     }
 }

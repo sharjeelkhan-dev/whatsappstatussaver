@@ -4,13 +4,13 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import com.example.whatsappstatussaver.data.local.dao.ReminderDao
 import com.example.whatsappstatussaver.data.local.entity.ReminderEntity
 import com.example.whatsappstatussaver.utils.ReminderReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,8 +35,25 @@ class ReminderRepository @Inject constructor(
         reminderDao.deleteReminder(reminder)
     }
 
-    private fun scheduleAlarm(reminder: ReminderEntity) {
+    suspend fun updateReminderCompletion(reminder: ReminderEntity, isCompleted: Boolean) {
+        reminderDao.updateCompletionStatus(reminder.id, isCompleted)
+        if (isCompleted) {
+            cancelAlarm(reminder)
+        } else if (reminder.isAlertEnabled) {
+            scheduleAlarm(reminder.copy(isCompleted = false))
+        }
+    }
+
+    fun scheduleAlarm(reminder: ReminderEntity) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        
+        // Check if we can schedule exact alarms on Android 12+
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra("REMINDER_ID", reminder.id)
             putExtra("REMINDER_TITLE", reminder.title)
@@ -50,43 +67,49 @@ class ReminderRepository @Inject constructor(
         )
 
         val calendar = Calendar.getInstance().apply {
-            timeInMillis = reminder.date
+            val dateCal = Calendar.getInstance().apply { timeInMillis = reminder.date }
             val timeCal = Calendar.getInstance().apply { timeInMillis = reminder.time }
+            
+            set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+            set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+            set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
             set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
             set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
             set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        Log.d("ReminderRepository", "Scheduling alarm for: ${sdf.format(calendar.time)} (id: ${reminder.id})")
+        val now = System.currentTimeMillis()
+        if (calendar.timeInMillis <= now) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
 
-        if (calendar.timeInMillis <= System.currentTimeMillis()) {
-            if (reminder.repeatType == "Daily") {
-                calendar.add(Calendar.DAY_OF_YEAR, 1)
-                Log.d("ReminderRepository", "Time is in past, adjusted to tomorrow: ${sdf.format(calendar.time)}")
+        Log.d("ReminderRepository", "Scheduling alarm for: ${calendar.time} (ID: ${reminder.id}, Exact: $canScheduleExact)")
+
+        try {
+            if (canScheduleExact) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
             } else {
-                Log.d("ReminderRepository", "Time is in past and not repeating, NOT scheduling.")
-                return
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
             }
-        }
-
-        if (reminder.repeatType == "Daily") {
-            alarmManager.setRepeating(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExactAndAllowWhileIdle(
+        } catch (e: Exception) {
+            Log.e("ReminderRepository", "Failed to schedule alarm", e)
+            alarmManager.set(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
                 pendingIntent
             )
         }
     }
-
-    private fun cancelAlarm(reminder: ReminderEntity) {
+  private fun cancelAlarm(reminder: ReminderEntity) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, ReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(

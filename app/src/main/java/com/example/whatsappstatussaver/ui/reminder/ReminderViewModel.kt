@@ -30,4 +30,10 @@ class ReminderViewModel @Inject constructor(
             repository.deleteReminder(reminder)
         }
     }
+
+    fun toggleReminderCompletion(reminder: ReminderEntity) {
+        viewModelScope.launch {
+            repository.updateReminderCompletion(reminder, !reminder.isCompleted)
+        }
+    }
 }
