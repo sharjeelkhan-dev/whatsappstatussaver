@@ -194,7 +194,7 @@ fun MediaViewerScreen(
                     IconButton(
                         onClick = onNavigateBack,
                         modifier = Modifier
-                            .padding(8.dp)
+                            .padding(12.dp)
                             .size(36.dp)
                             .background(Color(0xFFE0F2F1), RoundedCornerShape(8.dp))
                     ) {

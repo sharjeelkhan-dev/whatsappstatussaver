@@ -57,7 +57,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -166,7 +165,7 @@ fun StatusScreen(
 
             try {
                 launcher.launch(initialHintUri)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Fallback 1: If OS prevents direct structural entry to hidden folder, default to Media
                 try {
                     val mediaFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
@@ -175,7 +174,7 @@ fun StatusScreen(
                         "primary:Android/media/com.whatsapp/WhatsApp/Media"
                     }
                     launcher.launch(DocumentsContract.buildDocumentUri(authority, mediaFallbackId))
-                } catch (e2: Exception) {
+                } catch (_: Exception) {
                     // Fallback 2: Fallback to root package directory
                     try {
                         val pkgFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
@@ -184,7 +183,7 @@ fun StatusScreen(
                             "primary:Android/media/com.whatsapp"
                         }
                         launcher.launch(DocumentsContract.buildDocumentUri(authority, pkgFallbackId))
-                    } catch (e3: Exception) {
+                    } catch (_: Exception) {
                         launcher.launch(null) // Final fallback to default storage root
                     }
                 }
@@ -230,7 +229,7 @@ fun StatusScreenContent(
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFE0F2F1))
                     ) {
                         Icon(Icons.Default.ArrowBackIosNew,

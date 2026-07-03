@@ -118,7 +118,7 @@ fun SettingsContent(
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFE0F2F1))
                     ) {
                         Icon(

@@ -185,7 +185,7 @@ fun DirectChatScreen(
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(LightBg)
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack,

@@ -11,17 +11,40 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoAwesomeMotion
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +52,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -107,7 +131,6 @@ fun HomeScreen(
             containerColor = Color.White
         )
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,13 +141,15 @@ fun HomeScreen(
                     ) {
                         Text(
                             "Status Saver",
+                            modifier = Modifier.offset(y = 10.dp),
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 22.sp,
+                            fontSize = 26.sp,
                             color = AppTeal
                         )
                         Text(
                             "All-in-one downloader",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
+                            modifier = Modifier.offset(y = 4.dp),
                             color = Color.Gray,
                             fontWeight = FontWeight.Medium
                         )
@@ -134,12 +159,13 @@ fun HomeScreen(
                     IconButton(
                         onClick = onNavigateToSettings,
                         modifier = Modifier
-                            .padding(end = 8.dp)
-                            .background(LightTeal, CircleShape)
                             .size(40.dp)
+                            .offset(x = (-14).dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(LightTeal.copy(alpha = 0.5f))
                     ) {
                         Icon(
-                            Icons.Default.Settings,
+                            painter = painterResource(id = R.drawable.setting_icon),
                             contentDescription = "Settings",
                             tint = AppTeal,
                             modifier = Modifier.size(20.dp)
@@ -221,12 +247,12 @@ fun HomeScreen(
         }
     }
 }
-
 @Composable
 fun PremiumPlatformCard(title: String,
                         icon: ImageVector,
                         onClick: () -> Unit,
-                        modifier: Modifier) {
+                        modifier: Modifier)
+{
     Card(
         onClick = onClick,
         modifier = modifier.height(140.dp),
@@ -242,7 +268,7 @@ fun PremiumPlatformCard(title: String,
             Box(
                 modifier = Modifier
                     .size(60.dp)
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(LightTeal),
                 contentAlignment = Alignment.Center
             ) {
@@ -293,14 +319,16 @@ fun ModernToolCard(title: String, subtitle: String,
             {
                 Text(title, fontWeight = FontWeight.Bold,
                     color = Color(0xFF263238),
+                    modifier = Modifier.offset(y = 5.dp),
                     fontSize = 15.sp)
                 Text(subtitle, color = Color.Gray,
                     fontSize = 12.sp,
+                    modifier = Modifier.offset(y = (-1).dp),
                     fontWeight = FontWeight.Medium)
             }
             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint = Color(0xFFCFD8DC),
+                tint = Color(0xFF000000),
                 modifier = Modifier.size(14.dp))
         }
     }

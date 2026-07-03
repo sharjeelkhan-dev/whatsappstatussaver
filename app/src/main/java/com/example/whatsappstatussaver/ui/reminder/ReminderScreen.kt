@@ -1,46 +1,85 @@
 package com.example.whatsappstatussaver.ui.reminder
 
-import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
-import android.os.Build
-import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.local.entity.ReminderEntity
 import java.text.SimpleDateFormat
-import java.util.*
-import com.example.whatsappstatussaver.R
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 private val AppTeal = Color(0xFF00897B)
 
@@ -106,14 +145,15 @@ fun ReminderDashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reminder", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = { Text("Reminder", fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp) },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFE0F2F1))
                     ) {
                         Icon(
@@ -154,17 +194,16 @@ fun ReminderDashboardScreen(
                 ReminderStatCard(
                     title = "Today",
                     count = todayRemindersCount,
-                    icon = Icons.Default.CalendarToday,
+                    icon = ImageVector.vectorResource(id = R.drawable.calendar_blank_line_icon),
                     modifier = Modifier.weight(1f)
                 )
                 ReminderStatCard(
                     title = "Scheduled",
                     count = reminders.size,
-                    icon = Icons.Default.Event,
+                    icon = ImageVector.vectorResource(id = R.drawable.date_icon),
                     modifier = Modifier.weight(1f)
                 )
             }
-
             // My Lists Section
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -173,11 +212,10 @@ fun ReminderDashboardScreen(
                     fontSize = 18.sp,
                     color = Color(0xFF263238)
                 )
-
                 ReminderListItem(
                     title = "Reminders",
                     count = reminders.size,
-                    icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                    icon = ImageVector.vectorResource(id = R.drawable.check_list_icon),
                     onClick = onNavigateToList
                 )
             }
@@ -189,7 +227,7 @@ fun ReminderDashboardScreen(
 fun ReminderStatCard(
     title: String,
     count: Int,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -215,7 +253,8 @@ fun ReminderStatCard(
                         .background(AppTeal),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(icon, contentDescription = null,
+                        tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Text(
                     text = count.toString(),
@@ -260,7 +299,8 @@ fun ReminderListItem(
                     .background(AppTeal),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null,
+                    tint = Color.White, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
@@ -279,7 +319,7 @@ fun ReminderListItem(
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = Color.Black,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -313,7 +353,7 @@ fun ReminderListScreen(
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFFE0F2F1))
                     ) {
                         Icon(
@@ -543,7 +583,13 @@ fun AddReminderForm(
                         Text("Add", color = AppTeal, fontWeight = FontWeight.Bold)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    scrolledContainerColor = Color.Unspecified,
+                    navigationIconContentColor = Color.Unspecified,
+                    titleContentColor = Color.Unspecified,
+                    actionIconContentColor = Color.Unspecified
+                )
             )
         },
         modifier = Modifier.fillMaxSize()
