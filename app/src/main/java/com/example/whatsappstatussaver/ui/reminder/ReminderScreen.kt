@@ -464,7 +464,6 @@ fun ReminderItem(
     onDelete: () -> Unit
 ) {
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -484,9 +483,7 @@ fun ReminderItem(
                     .fillMaxHeight()
                     .background(AppTeal)
             )
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = reminder.title,
@@ -494,7 +491,6 @@ fun ReminderItem(
                     fontSize = 16.sp,
                     color = Color.Black
                 )
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.CalendarToday,
@@ -514,9 +510,12 @@ fun ReminderItem(
             // Radio/Checkbox Circle
             IconButton(onClick = onToggle) {
                 Icon(
-                    imageVector = if (reminder.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    imageVector = if (reminder.isCompleted)
+                        Icons.Default.CheckCircle else
+                            Icons.Default.RadioButtonUnchecked,
                     contentDescription = "Toggle Complete",
-                    tint = if (reminder.isCompleted) AppTeal else Color.LightGray,
+                    tint = if (reminder.isCompleted) AppTeal
+                    else Color.LightGray,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -528,7 +527,6 @@ fun ReminderItem(
                     tint = Color.Red.copy(alpha = 0.4f),
                     modifier = Modifier.size(20.dp))
             }
-
             Spacer(modifier = Modifier.width(8.dp))
         }
     }

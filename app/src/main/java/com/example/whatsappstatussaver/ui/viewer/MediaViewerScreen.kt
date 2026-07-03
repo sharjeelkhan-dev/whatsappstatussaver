@@ -26,8 +26,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Share
@@ -257,7 +257,7 @@ fun MediaViewerScreen(
                         .size(56.dp)
                         .background(AppTeal, CircleShape)
                 ) {
-                    Icon(Icons.Default.Chat, contentDescription = "Share on WhatsApp", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "Share on WhatsApp", tint = Color.White)
                 }
 
                 // General Share Button
