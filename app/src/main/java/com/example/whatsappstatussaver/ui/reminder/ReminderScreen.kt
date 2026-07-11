@@ -159,7 +159,7 @@ fun ReminderDashboardScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = AppTeal,
+                            tint = Color.Black,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -359,7 +359,7 @@ fun ReminderListScreen(
                         Icon(
                             Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = AppTeal,
+                            tint = Color.Black,
                             modifier = Modifier.size(18.dp)
                         )
                     }

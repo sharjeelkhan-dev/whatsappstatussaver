@@ -167,7 +167,7 @@ fun HomeScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.setting_icon),
                             contentDescription = "Settings",
-                            tint = AppTeal,
+                            tint = Color(0xFF000000),
                             modifier = Modifier.size(20.dp)
                         )
                     }

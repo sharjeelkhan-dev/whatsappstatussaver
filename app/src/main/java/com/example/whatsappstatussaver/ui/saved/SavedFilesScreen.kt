@@ -142,7 +142,7 @@ fun SavedFilesContent(
                                 .background(Color(0xFFE0F2F1))
                         ) {
                             Icon(Icons.Default.ArrowBackIosNew,
-                                contentDescription = "Back", tint = AppTeal,
+                                contentDescription = "Back", tint = Color.Black,
                                 modifier = Modifier.size(18.dp))
                         }
                     }

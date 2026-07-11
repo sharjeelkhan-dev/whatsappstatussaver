@@ -234,7 +234,7 @@ fun StatusScreenContent(
                     ) {
                         Icon(Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = AppTeal,
+                            tint = Color.Black,
                             modifier = Modifier.size(18.dp))
                     }
                 },

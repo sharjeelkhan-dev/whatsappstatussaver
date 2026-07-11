@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
-private val AppTeal = Color(0xFF00897B)
+private val AppTeal = Color(0xFF00887A)
 private val LightBg = Color(0xFFE0F2F1)
 
 data class Country(val name: String, val code: String, val flag: String, val abbrev: String)
@@ -216,7 +216,7 @@ fun DirectChatScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back", 
-                            tint = AppTeal,
+                            tint = Color.Black,
                             modifier = Modifier.size(18.dp))
                     }
                 },
