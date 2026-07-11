@@ -14,10 +14,10 @@
 <summary><b>✨ View Interface Design (Click to Expand)</b></summary>
 <br/>
 <table width="100%">
-  <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/2c1cb761-2b79-4b0d-85a1-465801c1f159" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/d37631cf-4d69-4c5a-a5de-1b8a6baf7478" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/6cf18f41-6e88-4eb6-8267-b56708e4c5bb" width="100%" alt="Screen 1" /></td>
+ <tr>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/bc0c0419-6447-424c-aacf-beb810fdee82" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/620bf337-8645-4a30-9ca0-828a36ea1640" width="100%" alt="Screen 2" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3ea4cfa1-54fa-4665-874c-8c153be5d720" width="100%" alt="Screen 3" /></td>
   </tr>
 </table>
 </details>
@@ -28,3 +28,5 @@
 * Android Studio Ladybug (or newer)
 * JDK 17+
 * Android SDK 28 (Android 9.0) or higher
+
+
