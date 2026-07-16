@@ -11,13 +11,24 @@
 | 🎨 **Asset Attribution** | Media action elements and download utility vectors optimized from [Uxwing](https://uxwing.com/). |
 
 <details>
-<summary><b>✨ View Interface Design (Click to Expand)</b></summary>
+<summary><b>📱 View App Screenshots (Click to Expand)</b></summary>
 <br/>
 <table width="100%">
- <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/bc0c0419-6447-424c-aacf-beb810fdee82" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/620bf337-8645-4a30-9ca0-828a36ea1640" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3ea4cfa1-54fa-4665-874c-8c153be5d720" width="100%" alt="Screen 3" /></td>
+  <tr>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/ea952ad4-51cf-4dc0-8a8e-6bf34b9965da" width="100%" alt="Screen 1" />
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/486afc71-ad9c-4d19-910f-0a1ad6a370f4" width="100%" alt="Screen 2" />
+    </td>
+    <td width="33.3%" align="center">
+      <img src="https://github.com/user-attachments/assets/997f8530-00e5-46ad-bcf6-e11b5205d6fd" width="100%" alt="Screen 3" />
+    </td>
+  </tr>
+  <tr>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/f8ce2b1b-11e1-44b0-b1b5-8ed3cae1b889" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/4a1cfdae-8407-4ff1-90c7-e9dba78967d0" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/80660608-6101-4433-bac1-2ca740035319" width="100%" alt="Screen 5" /></td>  
   </tr>
 </table>
 </details>
@@ -28,5 +39,3 @@
 * Android Studio Ladybug (or newer)
 * JDK 17+
 * Android SDK 28 (Android 9.0) or higher
-
-
