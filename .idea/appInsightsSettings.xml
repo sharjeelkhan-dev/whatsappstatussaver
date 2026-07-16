@@ -8,7 +8,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.whatsappstatussaver" />
+                  <option name="appId" value="com.sharjeel.whatsappstatussaver" />
                   <option name="mobileSdkAppId" value="1:960572949443:android:019a8c88f0c6e45a1ff376" />
                   <option name="projectId" value="whatsapp-status-saver-7fd79" />
                   <option name="projectNumber" value="960572949443" />

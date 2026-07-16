@@ -8,10 +8,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.whatsappstatussaver"
+    namespace = "com.sharjeel.whatsappstatussaver"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.whatsappstatussaver"
+        applicationId = "com.sharjeel.whatsappstatussaver"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
