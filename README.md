@@ -23,7 +23,6 @@
     <td width="33.3%  align="center><img  src="https://github.com/user-attachments/assets/49265bbb-4414-45ba-b716-6b5f819b82f7" width="100%" alt="Screen 4" /></td>
     <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/f8ce2b1b-11e1-44b0-b1b5-8ed3cae1b889" width="100%" alt="Screen 5" /></td>
     <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/4a1cfdae-8407-4ff1-90c7-e9dba78967d0" width="100%" alt="Screen 6" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/80660608-6101-4433-bac1-2ca740035319" width="100%" alt="Screen 7" /></td>
   </tr>
 </table>
 </details>
