@@ -4,8 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +18,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,8 +36,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,17 +44,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
+import com.example.whatsappstatussaver.R
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
-private val AppTeal = Color(0xFF00887A)
-private val LightBg = Color(0xFFE0F2F1)
+private val PrimaryGreen = Color(0xFF00A884)
+private val SecondaryGreen = Color(0xFF005E4C)
+private val SoftGreen = Color(0xFFE7FFFA)
+private val DarkText = Color(0xFF1C2D2A)
 
 data class Country(val name: String, val code: String, val flag: String, val abbrev: String)
 
@@ -188,7 +194,7 @@ fun DirectChatScreen(
     var phoneNumber by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
-    var selectedCountry by remember { mutableStateOf(allCountries.find { it.name == "Latvia" } ?: allCountries[0]) }
+    var selectedCountry by remember { mutableStateOf(allCountries.find { it.name == "Pakistan" } ?: allCountries[0]) }
     var showCountryPicker by remember { mutableStateOf(false) }
 
     if (showCountryPicker) {
@@ -203,57 +209,47 @@ fun DirectChatScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("WhatsApp Direct Chat", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(LightBg)
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back", 
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+            DirectChatTopBar(onBack = onNavigateBack)
         },
-        modifier = modifier.fillMaxSize()
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            Text(
+                "Start a chat without saving a contact",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Gray
+            )
+
             // Country Picker
             Surface(
                 onClick = { showCountryPicker = true },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = LightBg
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+                shape = RoundedCornerShape(20.dp),
+                color = Color.White,
+                shadowElevation = 4.dp
             ) {
                 Row(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                         Text(selectedCountry.flag, fontSize = 24.sp)
-                         Spacer(modifier = Modifier.width(12.dp))
-                         Text("${selectedCountry.name} (${selectedCountry.abbrev}) ${selectedCountry.code}",
-                             color = AppTeal, fontWeight = FontWeight.Medium)
+                         Text(selectedCountry.flag, fontSize = 28.sp)
+                         Spacer(modifier = Modifier.width(16.dp))
+                         Text("${selectedCountry.name} (${selectedCountry.code})",
+                             color = DarkText, fontWeight = FontWeight.Bold,
+                             fontSize = 16.sp)
                     }
-                    Icon(Icons.Default.ArrowDropDown,
+                    Icon( painter = painterResource(id = R.drawable.angle_circle_arrow_down_icon),
                         contentDescription = null,
-                        tint = AppTeal)
+                        modifier = Modifier.size(24.dp),
+                        tint = PrimaryGreen)
                 }
             }
 
@@ -261,30 +257,35 @@ fun DirectChatScreen(
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { if (it.all { char -> char.isDigit() }) phoneNumber = it },
-                placeholder = { Text("Enter Your Number", color = Color.LightGray) },
+                placeholder = { Text("Phone Number", color = Color.LightGray) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(20.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = AppTeal,
-                    cursorColor = AppTeal
-                )
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedBorderColor = PrimaryGreen,
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White
+                ),
+                prefix = { Text("${selectedCountry.code} ", color = PrimaryGreen, fontWeight = FontWeight.Bold) }
             )
 
             // Message Input
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
-                placeholder = { Text("Write Your Message...", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth().height(160.dp),
-                shape = RoundedCornerShape(8.dp),
+                placeholder = { Text("Write your message here (optional)...", color = Color.LightGray) },
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    focusedBorderColor = AppTeal,
-                    cursorColor = AppTeal
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedBorderColor = PrimaryGreen,
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White
                 )
             )
+
+            Spacer(modifier = Modifier.weight(1f))
 
             // Send Button
             Button(
@@ -297,45 +298,58 @@ fun DirectChatScreen(
                     val url = "https://api.whatsapp.com/send?phone=$formattedNumber&text=${Uri.encode(message)}"
                     
                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse(url)
-                    }
-                    
-                    val chooserIntent = Intent.createChooser(intent, "Open with")
-                    
-                    // Create explicit intents for both WhatsApp versions to force them into the chooser
-                    val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse(url)
-                        setPackage("com.whatsapp")
-                    }
-                    val businessIntent = Intent(Intent.ACTION_VIEW).apply {
-                        data = Uri.parse(url)
-                        setPackage("com.whatsapp.w4b")
-                    }
-                    
-                    val targetedIntents = mutableListOf<Intent>()
-                    if (context.packageManager.getLaunchIntentForPackage("com.whatsapp") != null) {
-                        targetedIntents.add(whatsappIntent)
-                    }
-                    if (context.packageManager.getLaunchIntentForPackage("com.whatsapp.w4b") != null) {
-                        targetedIntents.add(businessIntent)
-                    }
-                    
-                    if (targetedIntents.isNotEmpty()) {
-                        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
+                        data = url.toUri()
                     }
                     
                     try {
-                        context.startActivity(chooserIntent)
-                    } catch (e: Exception) {
+                        context.startActivity(Intent.createChooser(intent, "Open with"))
+                    } catch (_: Exception) {
                         Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AppTeal)
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
             ) {
-                Text("Send via WhatsApp", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Open WhatsApp", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 18.sp)
             }
+        }
+    }
+}
+
+@Composable
+private fun DirectChatTopBar(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .background(
+                brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Direct Chat",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
     }
 }
@@ -352,12 +366,12 @@ fun CountryPickerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
+            shape = RoundedCornerShape(28.dp),
             color = Color.White
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Select Country", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = AppTeal)
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text("Select Country", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = DarkText)
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 OutlinedTextField(
@@ -365,26 +379,35 @@ fun CountryPickerDialog(
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Search country...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryGreen) },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryGreen,
+                        unfocusedBorderColor = Color.LightGray
+                    )
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(filteredCountries) { country ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onSelect(country) }
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = { onSelect(country) },
+                            shape = RoundedCornerShape(16.dp),
+                            color = SoftGreen.copy(alpha = 0.3f)
                         ) {
-                            Text(country.flag, fontSize = 24.sp)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text("${country.name} (${country.abbrev})", modifier = Modifier.weight(1f), fontSize = 16.sp)
-                            Text(country.code, fontWeight = FontWeight.Bold, color = AppTeal)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(country.flag, fontSize = 28.sp)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(country.name, modifier = Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text(country.code, fontWeight = FontWeight.ExtraBold, color = PrimaryGreen)
+                            }
                         }
                     }
                 }
@@ -396,7 +419,7 @@ fun CountryPickerDialog(
 @Preview(showBackground = true)
 @Composable
 fun DirectChatScreenPreview() {
-    MaterialTheme {
+    WhatsAppStatusSaverTheme {
         DirectChatScreen(onNavigateBack = {})
     }
 }

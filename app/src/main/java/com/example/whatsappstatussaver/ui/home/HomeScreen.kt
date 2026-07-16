@@ -10,36 +10,36 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.AutoAwesomeMotion
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,13 +48,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,10 +64,10 @@ import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.models.PlatformType
 import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
-private val AppTeal = Color(0xFF00897B)
-private val LightTeal = Color(0xFFE0F2F1)
+private val PrimaryGreen = Color(0xFF00A884)
+private val SecondaryGreen = Color(0xFF005E4C)
+private val DarkText = Color(0xFF1C2D2A)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToStatus: (PlatformType) -> Unit,
@@ -82,21 +83,15 @@ fun HomeScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            onNavigateToReminder()
-        } else {
-            showPermissionDialog = true
-        }
+        if (isGranted) onNavigateToReminder() else showPermissionDialog = true
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun checkAndNavigateToReminder() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val needsExactAlarmPerm = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()
-        val needsNotificationPerm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val needsExactAlarmPerm = !alarmManager.canScheduleExactAlarms()
+        val needsNotificationPerm =
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        } else {
-            false
-        }
 
         if (needsNotificationPerm) {
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -108,240 +103,306 @@ fun HomeScreen(
     }
 
     if (showPermissionDialog) {
-        AlertDialog(
-            onDismissRequest = { showPermissionDialog = false },
-            title = { Text("Permissions Required", fontWeight = FontWeight.Bold) },
-            text = { Text("Notifications and Alarms are required for reminders to work properly. Please enable them in settings.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showPermissionDialog = false
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Settings", color = AppTeal, fontWeight = FontWeight.Bold)
+        PermissionDialog(
+            onDismiss = { showPermissionDialog = false },
+            onOpenSettings = {
+                showPermissionDialog = false
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPermissionDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
-                }
-            },
-            containerColor = Color.White
+                context.startActivity(intent)
+            }
         )
     }
+
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column(
-                        modifier = Modifier.padding(start = 4.dp),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            "Status Saver",
-                            modifier = Modifier.offset(y = 10.dp),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 26.sp,
-                            color = AppTeal
-                        )
-                        Text(
-                            "All-in-one downloader",
-                            fontSize = 14.sp,
-                            modifier = Modifier.offset(y = 4.dp),
-                            color = Color.Gray,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = onNavigateToSettings,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .offset(x = (-14).dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(LightTeal.copy(alpha = 0.5f))
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.setting_icon),
-                            contentDescription = "Settings",
-                            tint = Color(0xFF000000),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                ),
-                modifier = Modifier.shadow(4.dp)
-            )
-        },
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        containerColor = Color(0xFFFBFDFF),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF8FAFB))
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Main Platform Section
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    "Choose Platform",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF263238)
+            HeaderSection(onNavigateToSettings)
+
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(28.dp)
+            ) {
+                // Main Platform Selection
+                PlatformSection(onNavigateToStatus)
+
+                // Tools Section
+                ToolsSection(
+                    onDirectChat = onNavigateToDirectChat,
+                    onSavedFiles = onNavigateToSavedFiles,
+                    onReminder = { checkAndNavigateToReminder() }
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderSection(onSettingsClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(PrimaryGreen, SecondaryGreen)
+                ),
+                shape = RoundedCornerShape(bottomStart = 48.dp, bottomEnd = 48.dp)
+            )
+            .statusBarsPadding()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 30.dp)
+    ) {
+        Column(modifier = Modifier.align(Alignment.BottomStart)) {
+            Text(
+                "Status Saver",
+                modifier = Modifier.offset(x = 10.dp, y = 10.dp),
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                "Keep your favorite stories forever",
+                modifier = Modifier.offset(x = 10.dp,y = 10.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
+        IconButton(
+            onClick = onSettingsClick,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 15.dp)
+                .background(Color.White.copy(alpha = 0.2f), CircleShape)
+        ) {
+            Icon(painter = painterResource(id = R.drawable.setting_icon),
+                contentDescription = "Settings",
+                modifier = Modifier.size(25.dp),
+                tint = Color.White)
+        }
+    }
+}
+
+@Composable
+private fun PlatformSection(onPlatformClick: (PlatformType) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionTitle(title = "Choose Platform")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            PlatformCard(
+                title = "WhatsApp",
+                subtitle = "Regular",
+                icon = ImageVector.vectorResource(id = R.drawable.double_chat_icon),
+                gradient = listOf(Color(0xFF25D366), Color(0xFF075E54)),
+                modifier = Modifier.weight(1f),
+                onClick = { onPlatformClick(PlatformType.WHATSAPP) }
+            )
+            PlatformCard(
+                title = "Business",
+                subtitle = "Professional",
+                icon = ImageVector.vectorResource(id = R.drawable.briefcase_icon),
+                gradient = listOf(Color(0xFF34B7F1), Color(0xFF075E54)),
+                modifier = Modifier.weight(1f),
+                onClick = { onPlatformClick(PlatformType.WHATSAPP_BUSINESS) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToolsSection(
+    onDirectChat: () -> Unit,
+    onSavedFiles: () -> Unit,
+    onReminder: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SectionTitle(title = "Premium Tools")
+        
+        ToolRow(
+            title = "Direct Chat",
+            description = "Message without saving number",
+            icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
+            iconContainerColor = Color(0xFFE8F5E9),
+            iconTint = PrimaryGreen,
+            onClick = onDirectChat
+        )
+
+        ToolRow(
+            title = "Saved Gallery",
+            description = "Manage your downloaded media",
+            icon = ImageVector.vectorResource(id = R.drawable.picture_icon),
+            iconContainerColor = Color(0xFFFFF3E0),
+            iconTint = Color(0xFFFF9800),
+            onClick = onSavedFiles
+        )
+
+        ToolRow(
+            title = "Daily Reminder",
+            description = "Get notified for status updates",
+            icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
+            iconContainerColor = Color(0xFFE3F2FD),
+            iconTint = Color(0xFF2196F3),
+            onClick = onReminder
+        )
+    }
+}
+
+@Composable
+private fun PlatformCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(180.dp),
+        shape = RoundedCornerShape(32.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.linearGradient(gradient))
+                .padding(20.dp)
+        ) {
+            Column {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(alpha = 0.2f),
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    PremiumPlatformCard(
-                        title = "WhatsApp",
-                        icon = ImageVector.vectorResource(id = R.drawable.speaking_bubbles_line_icon),
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigateToStatus(PlatformType.WHATSAPP) }
-                    )
-                    PremiumPlatformCard(
-                        title = "Business",
-                        icon = ImageVector.vectorResource(id = R.drawable.briefcase_line_icon),
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigateToStatus(PlatformType.WHATSAPP_BUSINESS) }
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, contentDescription = null,
+                            tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Text(title, fontWeight = FontWeight.ExtraBold,
+                    fontSize = 20.sp,
+                    color = Color.White)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(subtitle, fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.7f))
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow_long_right_icon),
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
-
-            // Quick Tools Section
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    "Quick Tools",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF263238)
-                )
-
-                ModernToolCard(
-                    title = "Direct Chat",
-                    subtitle = "Message without saving number",
-                    icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
-                    onClick = onNavigateToDirectChat
-                )
-                ModernToolCard(
-                    title = "Saved Gallery",
-                    subtitle = "Manage your downloaded media",
-                    icon = Icons.Default.AutoAwesomeMotion,
-                    onClick = onNavigateToSavedFiles
-                )
-                ModernToolCard(
-                    title = "Daily Reminder",
-                    subtitle = "Never miss a status again",
-                    icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
-                    onClick = { checkAndNavigateToReminder() }
-                )
-            }
-        }
-    }
-}
-@Composable
-fun PremiumPlatformCard(title: String,
-                        icon: ImageVector,
-                        onClick: () -> Unit,
-                        modifier: Modifier)
-{
-    Card(
-        onClick = onClick,
-        modifier = modifier.height(140.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(LightTeal),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon,
-                    contentDescription = title,
-                    tint = AppTeal,
-                    modifier = Modifier.size(30.dp))
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(title, fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF263238),
-                fontSize = 16.sp)
         }
     }
 }
 
 @Composable
-fun ModernToolCard(title: String, subtitle: String,
-                   icon: ImageVector,
-                   onClick: () -> Unit) {
-    Card(
+private fun ToolRow(
+    title: String,
+    description: String,
+    icon: ImageVector,
+    iconContainerColor: Color,
+    iconTint: Color,
+    onClick: () -> Unit
+) {
+    Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White,
+        shadowElevation = 4.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(LightTeal.copy(alpha = 0.5f)),
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(iconContainerColor),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon,
-                    contentDescription = null,
-                    tint = AppTeal,
-                    modifier = Modifier.size(24.dp))
+                Icon(icon, contentDescription = null,
+                    tint = iconTint, modifier = Modifier.size(26.dp))
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f))
-            {
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(title, fontWeight = FontWeight.Bold,
-                    color = Color(0xFF263238),
-                    modifier = Modifier.offset(y = 5.dp),
-                    fontSize = 15.sp)
-                Text(subtitle, color = Color.Gray,
-                    fontSize = 12.sp,
-                    modifier = Modifier.offset(y = (-1).dp),
-                    fontWeight = FontWeight.Medium)
+                    fontSize = 16.sp, color = DarkText)
+                Text(
+                    description,
+                    fontSize = 13.sp,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
-            Icon(Icons.AutoMirrored.Filled.ArrowForwardIos,
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_long_right_icon),
                 contentDescription = null,
-                tint = Color(0xFF000000),
-                modifier = Modifier.size(14.dp))
+                tint = Color.Gray.copy(alpha = 1f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
+}
+
+@Composable
+private fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        color = DarkText,
+        modifier = Modifier.padding(start = 8.dp)
+    )
+}
+
+@Composable
+private fun PermissionDialog(onDismiss: () -> Unit, onOpenSettings: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Permissions Needed", fontWeight = FontWeight.Bold) },
+        text = { Text("To set reminders, we need notification and alarm permissions. Please enable them in settings.") },
+        confirmButton = {
+            TextButton(onClick = onOpenSettings) {
+                Text("Settings", color = PrimaryGreen, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Later", color = Color.Gray)
+            }
+        },
+        containerColor = Color.White,
+        shape = RoundedCornerShape(28.dp)
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     WhatsAppStatusSaverTheme {
-        HomeScreen({},
-            {},
-            {},
-            {},
-            {})
+        HomeScreen({}, {}, {}, {}, {})
     }
 }

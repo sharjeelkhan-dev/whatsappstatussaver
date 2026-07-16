@@ -14,12 +14,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +32,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
-private val AppTeal = Color(0xFF00897B)
+private val PrimaryGreen = Color(0xFF00A884)
+private val SecondaryGreen = Color(0xFF005E4C)
+private val DarkText = Color(0xFF1C2D2A)
+private val AccentGold = Color(0xFFFFD700)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,8 +56,7 @@ fun SettingsScreen(
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             context.contentResolver.takePersistableUriPermission(uri, takeFlags)
             viewModel.setSaveLocation(uri)
-            Toast.makeText(context, "Save location updated!",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Save location updated!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -63,13 +67,8 @@ fun SettingsScreen(
             isExporting = true
             viewModel.exportMedia(uri) { success ->
                 isExporting = false
-                if (success) {
-                    Toast.makeText(context, "Export Successful!",
-                        Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Export Failed",
-                        Toast.LENGTH_SHORT).show()
-                }
+                if (success) Toast.makeText(context, "Export Successful!", Toast.LENGTH_SHORT).show()
+                else Toast.makeText(context, "Export Failed", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -88,13 +87,11 @@ fun SettingsScreen(
         },
         onExportData = { exportLauncher.launch("WhatsApp_Statuses_Backup.zip") },
         onCloudBackup = {
-            Toast.makeText(context, "Firebase Cloud Backup is a placeholder.",
-                Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Cloud Backup is coming soon!", Toast.LENGTH_SHORT).show()
         }
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContent(
     isDarkMode: Boolean,
@@ -110,49 +107,31 @@ fun SettingsContent(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold, fontSize = 22.sp) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE0F2F1))
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+            SettingsTopBar(onBack = onNavigateBack)
         },
-        containerColor = Color(0xFFF7F9FA)
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
+            // Premium Card
+            PremiumStatusCard(isPremium = isPremium, onUpgrade = onUpgradePremium)
+
             SettingsSection(title = "General") {
                 SettingsRow(
                     icon = Icons.Default.DarkMode,
                     title = "Dark Mode",
-                    subtitle = "Toggle dark theme for the app",
+                    subtitle = "Switch between light and dark theme",
                     action = {
                         Switch(
                             checked = isDarkMode,
                             onCheckedChange = onDarkModeToggle,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White,
-                                checkedTrackColor = AppTeal)
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryGreen)
                         )
                     }
                 )
@@ -161,71 +140,145 @@ fun SettingsContent(
             SettingsSection(title = "Storage") {
                 SettingsRow(
                     icon = Icons.Default.Folder,
-                    title = "Custom Save Location",
-                    subtitle = if (customSaveLocation != null)
-                        Uri.decode(customSaveLocation)
-                    else "Default (Internal Storage)",
+                    title = "Save Location",
+                    subtitle = if (customSaveLocation != null) Uri.decode(customSaveLocation) else "Default Storage",
                     onClick = onSelectFolder
-                )
-            }
-
-            SettingsSection(title = "Premium Features") {
-                SettingsRow(
-                    icon = Icons.Default.WorkspacePremium,
-                    iconColor = if (isPremium) Color(0xFFFFB300) else AppTeal,
-                    title = if (isPremium) "Premium Active" else "Upgrade to Premium",
-                    subtitle = if (isPremium) "Enjoying an ad-free experience"
-                    else "Remove ads and unlock all features",
-                    onClick = onUpgradePremium
                 )
             }
 
             SettingsSection(title = "Data Management") {
                 SettingsRow(
-                    icon = Icons.Default.FileDownload,
-                    title = if (isExporting) "Exporting..."
-                    else "Export All Media",
-                    subtitle = "Create a ZIP backup of all saved statuses",
+                    icon = Icons.Default.CloudDownload,
+                    title = if (isExporting) "Exporting..." else "Export All Media",
+                    subtitle = "Backup all saved statuses as a ZIP file",
                     onClick = onExportData,
                     enabled = !isExporting
                 )
                 SettingsRow(
                     icon = Icons.Default.CloudUpload,
-                    title = "Cloud Backup",
-                    subtitle = "Securely backup your media to Firebase",
+                    title = "Cloud Sync",
+                    subtitle = "Sync your media to the cloud",
                     onClick = onCloudBackup
                 )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun SettingsTopBar(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .background(
+                brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Settings",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun PremiumStatusCard(isPremium: Boolean, onUpgrade: () -> Unit) {
+    Card(
+        onClick = onUpgrade,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPremium) SecondaryGreen else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(if (isPremium) Color.White.copy(alpha = 0.2f) else AccentGold.copy(alpha = 0.2f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.WorkspacePremium,
+                    contentDescription = null,
+                    tint = if (isPremium) Color.White else AccentGold,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isPremium) "Premium Member" else "Upgrade to Premium",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = if (isPremium) Color.White else DarkText
+                )
+                Text(
+                    text = if (isPremium) "Thank you for supporting us!" else "Remove ads and unlock all tools",
+                    fontSize = 13.sp,
+                    color = if (isPremium) Color.White.copy(alpha = 0.7f) else Color.Gray
+                )
+            }
+
+            if (!isPremium) {
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
             }
         }
     }
 }
+
 @Composable
-fun SettingsSection(title: String, content:
-@Composable ColumnScope.() -> Unit) {
-    Column {
+fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = AppTeal,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            color = DarkText,
+            modifier = Modifier.padding(start = 8.dp)
         )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = Color.White,
+            shadowElevation = 2.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            Column {
                 content()
             }
         }
     }
 }
+
 @Composable
 fun SettingsRow(
     icon: ImageVector,
-    iconColor: Color = AppTeal,
     title: String,
     subtitle: String,
     onClick: (() -> Unit)? = null,
@@ -235,43 +288,32 @@ fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled && onClick != null)
-            { onClick?.invoke() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(enabled = enabled && onClick != null) { onClick?.invoke() }
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(iconColor.copy(alpha = 0.1f)),
+                .size(44.dp)
+                .background(PrimaryGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(20.dp))
+            Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(22.dp))
         }
-        Spacer(modifier = Modifier.width(16.dp))
+
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold, color = Color(0xFF263238))
-            Text(text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray)
+            Text(text = title, fontWeight = FontWeight.Bold, color = DarkText, fontSize = 16.sp)
+            Text(text = subtitle, fontSize = 13.sp, color = Color.Gray)
         }
+
         if (action != null) {
             action()
         } else if (onClick != null) {
-            Icon(Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = Color.LightGray)
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
         }
     }
 }
-
-// ==================== PREVIEWS ====================
 
 @Preview(showBackground = true)
 @Composable
@@ -281,24 +323,6 @@ fun SettingsScreenPreview() {
             isDarkMode = false,
             isPremium = false,
             customSaveLocation = null,
-            isExporting = false,
-            onNavigateBack = {},
-            onDarkModeToggle = {},
-            onSelectFolder = {},
-            onUpgradePremium = {},
-            onExportData = {},
-            onCloudBackup = {}
-        )
-    }
-}
-@Preview(showBackground = true, name = "Premium Active")
-@Composable
-fun SettingsScreenPremiumPreview() {
-    WhatsAppStatusSaverTheme {
-        SettingsContent(
-            isDarkMode = true,
-            isPremium = true,
-            customSaveLocation = "primary:Documents/WhatsAppSaver",
             isExporting = false,
             onNavigateBack = {},
             onDarkModeToggle = {},

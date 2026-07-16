@@ -6,88 +6,43 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.local.entity.ReminderEntity
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-private val AppTeal = Color(0xFF00897B)
+private val PrimaryGreen = Color(0xFF00A884)
+private val SecondaryGreen = Color(0xFF005E4C)
+private val SoftGreen = Color(0xFFE7FFFA)
+private val DarkText = Color(0xFF1C2D2A)
 
-enum class ReminderScreenType {
-    DASHBOARD,
-    LIST,
-    ADD
-}
+enum class ReminderScreenType { DASHBOARD, LIST, ADD }
 
 @Composable
 fun ReminderScreen(
@@ -98,32 +53,26 @@ fun ReminderScreen(
     val reminders by viewModel.allReminders.collectAsState()
 
     when (currentScreen) {
-        ReminderScreenType.DASHBOARD -> {
-            ReminderDashboardScreen(
-                reminders = reminders,
-                onBack = onNavigateBack,
-                onNavigateToList = { currentScreen = ReminderScreenType.LIST },
-                onAddNew = { currentScreen = ReminderScreenType.ADD }
-            )
-        }
-        ReminderScreenType.LIST -> {
-            ReminderListScreen(
-                reminders = reminders,
-                onBack = { currentScreen = ReminderScreenType.DASHBOARD },
-                onAddNew = { currentScreen = ReminderScreenType.ADD },
-                onDelete = { viewModel.deleteReminder(it) },
-                onToggleCompletion = { viewModel.toggleReminderCompletion(it) }
-            )
-        }
-        ReminderScreenType.ADD -> {
-            AddReminderForm(
-                onCancel = { currentScreen = ReminderScreenType.DASHBOARD },
-                onAdd = { reminder ->
-                    viewModel.addReminder(reminder)
-                    currentScreen = ReminderScreenType.DASHBOARD
-                }
-            )
-        }
+        ReminderScreenType.DASHBOARD -> ReminderDashboardScreen(
+            reminders = reminders,
+            onBack = onNavigateBack,
+            onNavigateToList = { currentScreen = ReminderScreenType.LIST },
+            onAddNew = { currentScreen = ReminderScreenType.ADD }
+        )
+        ReminderScreenType.LIST -> ReminderListScreen(
+            reminders = reminders,
+            onBack = { currentScreen = ReminderScreenType.DASHBOARD },
+            onAddNew = { currentScreen = ReminderScreenType.ADD },
+            onDelete = { viewModel.deleteReminder(it) },
+            onToggleCompletion = { viewModel.toggleReminderCompletion(it) }
+        )
+        ReminderScreenType.ADD -> AddReminderForm(
+            onCancel = { currentScreen = ReminderScreenType.DASHBOARD },
+            onAdd = { reminder ->
+                viewModel.addReminder(reminder)
+                currentScreen = ReminderScreenType.DASHBOARD
+            }
+        )
     }
 }
 
@@ -143,77 +92,46 @@ fun ReminderDashboardScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Reminder", fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE0F2F1))
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
+        topBar = { ReminderTopBar(title = "Reminders", onBack = onBack) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddNew,
-                containerColor = AppTeal,
+                containerColor = PrimaryGreen,
                 contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Reminder")
-            }
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            ) { Icon(Icons.Default.Add, contentDescription = "Add") }
         },
-        containerColor = Color.White
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
-            // Stats Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 ReminderStatCard(
                     title = "Today",
                     count = todayRemindersCount,
                     icon = ImageVector.vectorResource(id = R.drawable.calendar_blank_line_icon),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    color = PrimaryGreen
                 )
                 ReminderStatCard(
                     title = "Scheduled",
                     count = reminders.size,
                     icon = ImageVector.vectorResource(id = R.drawable.date_icon),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    color = Color(0xFF2196F3)
                 )
             }
-            // My Lists Section
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "My Lists",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color(0xFF263238)
-                )
-                ReminderListItem(
-                    title = "Reminders",
+
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("My Lists", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = DarkText)
+                ReminderListCard(
+                    title = "All Reminders",
                     count = reminders.size,
                     icon = ImageVector.vectorResource(id = R.drawable.check_list_icon),
                     onClick = onNavigateToList
@@ -224,104 +142,79 @@ fun ReminderDashboardScreen(
 }
 
 @Composable
-fun ReminderStatCard(
-    title: String,
-    count: Int,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(110.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1).copy(alpha = 0.3f))
+private fun ReminderTopBar(title: String, onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .background(
+                brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(AppTeal),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(icon, contentDescription = null,
-                        tint = Color.White, modifier = Modifier.size(20.dp))
-                }
-                Text(
-                    text = count.toString(),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF263238)
-                )
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
             }
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Gray
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         }
     }
 }
 
 @Composable
-fun ReminderListItem(
-    title: String,
-    count: Int,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
-) {
+fun ReminderStatCard(title: String, count: Int, icon: ImageVector, modifier: Modifier, color: Color) {
     Card(
+        modifier = modifier.height(130.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Box(
+                modifier = Modifier.size(40.dp).background(color.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) { Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp)) }
+            Column {
+                Text(text = count.toString(), fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = DarkText)
+                Text(text = title, fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderListCard(title: String, count: Int, icon: ImageVector, onClick: () -> Unit) {
+    Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1).copy(alpha = 0.5f))
+        shape = RoundedCornerShape(24.dp),
+        color = Color.White,
+        shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(AppTeal),
+                modifier = Modifier.size(48.dp).background(PrimaryGreen.copy(alpha = 0.1f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null,
-                    tint = Color.White, modifier = Modifier.size(20.dp))
-            }
+            ) { Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(24.dp)) }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = title,
-                modifier = Modifier.weight(1f),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF263238)
-            )
-            Text(
-                text = count.toString(),
-                fontSize = 16.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = Color.Black,
-                modifier = Modifier.size(20.dp)
-            )
+            Text(text = title, modifier = Modifier.weight(1f), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
+            Text(text = count.toString(), fontSize = 16.sp, color = Color.Gray, modifier = Modifier.padding(end = 8.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
         }
     }
 }
@@ -337,120 +230,51 @@ fun ReminderListScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredReminders = reminders.filter {
-        it.title.contains(searchQuery, ignoreCase = true) ||
-                it.description.contains(searchQuery, ignoreCase = true)
+        it.title.contains(searchQuery, ignoreCase = true) || it.description.contains(searchQuery, ignoreCase = true)
     }
 
-    val incompleteCount = filteredReminders.count { !it.isCompleted }
-
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Reminder List", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE0F2F1))
-                    ) {
-                        Icon(
-                            Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
+        topBar = { ReminderTopBar(title = "My Reminders", onBack = onBack) },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddNew,
-                containerColor = AppTeal,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Reminder")
-            }
+            FloatingActionButton(onClick = onAddNew, containerColor = PrimaryGreen, contentColor = Color.White, shape = CircleShape)
+            { Icon(Icons.Default.Add, contentDescription = "Add") }
         },
-        containerColor = Color.White
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 20.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "You have got $incompleteCount tasks to complete",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Search Bar
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp)) {
+            Spacer(modifier = Modifier.height(24.dp))
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search Task Here", color = Color.Gray) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color.Gray) },
-                shape = RoundedCornerShape(12.dp),
+                placeholder = { Text("Search your tasks...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryGreen) },
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.LightGray,
-                    unfocusedBorderColor = Color.LightGray,
-                    cursorColor = AppTeal
-                ),
-                singleLine = true
+                    focusedBorderColor = PrimaryGreen,
+                    unfocusedBorderColor = Color.Transparent,
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White
+                )
             )
-
             Spacer(modifier = Modifier.height(24.dp))
-
             if (filteredReminders.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No reminders found", color = Color.Gray)
-                }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No reminders found.", color = Color.Gray) }
             } else {
                 val grouped = filteredReminders.groupBy {
                     val cal = Calendar.getInstance().apply { timeInMillis = it.date }
                     val now = Calendar.getInstance()
-                    if (cal.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-                        cal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
-                    ) "Today" else "Upcoming"
+                    if (cal.get(Calendar.YEAR) == now.get(Calendar.YEAR) && cal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)) "Today" else "Upcoming"
                 }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                     grouped.forEach { (header, list) ->
-                        Text(
-                            text = header,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-
+                        Text(text = header, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = DarkText, modifier = Modifier.padding(vertical = 12.dp))
                         list.forEach { reminder ->
-                            ReminderItem(
-                                reminder = reminder,
-                                onToggle = { onToggleCompletion(reminder) },
-                                onDelete = { onDelete(reminder) }
-                            )
+                            ReminderItem(reminder = reminder, onToggle = { onToggleCompletion(reminder) }, onDelete = { onDelete(reminder) })
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(80.dp)) // FAB space
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
         }
@@ -458,86 +282,38 @@ fun ReminderListScreen(
 }
 
 @Composable
-fun ReminderItem(
-    reminder: ReminderEntity,
-    onToggle: () -> Unit,
-    onDelete: () -> Unit
-) {
+fun ReminderItem(reminder: ReminderEntity, onToggle: () -> Unit, onDelete: () -> Unit) {
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9F9)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Left Teal Stripe
-            Box(
-                modifier = Modifier
-                    .width(12.dp)
-                    .fillMaxHeight()
-                    .background(AppTeal)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = reminder.title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = dateFormatter.format(Date(reminder.date)),
-                        fontSize = 13.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            // Radio/Checkbox Circle
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onToggle) {
                 Icon(
-                    imageVector = if (reminder.isCompleted)
-                        Icons.Default.CheckCircle else
-                            Icons.Default.RadioButtonUnchecked,
-                    contentDescription = "Toggle Complete",
-                    tint = if (reminder.isCompleted) AppTeal
-                    else Color.LightGray,
+                    imageVector = if (reminder.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                    contentDescription = null,
+                    tint = if (reminder.isCompleted) PrimaryGreen else Color.LightGray,
                     modifier = Modifier.size(28.dp)
                 )
             }
-            
-            // Delete button (Optional but useful)
-            IconButton(onClick = onDelete) {
-                Icon( painter = painterResource(id = R.drawable.recycle_bin_icon),
-                    contentDescription = "Delete",
-                    tint = Color.Red.copy(alpha = 0.4f),
-                    modifier = Modifier.size(20.dp))
-            }
             Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = reminder.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
+                Text(text = dateFormatter.format(Date(reminder.date)), fontSize = 13.sp, color = Color.Gray)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(painter = painterResource(id = R.drawable.recycle_bin_icon), contentDescription = null, tint = Color.Red.copy(alpha = 0.4f), modifier = Modifier.size(20.dp))
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddReminderForm(
-    onCancel: () -> Unit,
-    onAdd: (ReminderEntity) -> Unit
-) {
+fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -548,277 +324,92 @@ fun AddReminderForm(
     var isAlertEnabled by remember { mutableStateOf(true) }
 
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    val timeFormatter = SimpleDateFormat("hh : mm a", Locale.getDefault())
+    val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("New Reminder", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
-                navigationIcon = {
-                    TextButton(onClick = onCancel) {
-                        Text("Cancel", color = AppTeal, fontWeight = FontWeight.SemiBold)
-                    }
-                },
+                title = { Text("New Reminder", fontWeight = FontWeight.Bold) },
+                navigationIcon = { TextButton(onClick = onCancel) { Text("Cancel", color = PrimaryGreen) } },
                 actions = {
-                    TextButton(onClick = {
-                        if (title.isBlank()) {
-                            Toast.makeText(context, "Please enter a title", Toast.LENGTH_SHORT).show()
-                            return@TextButton
-                        }
-                        onAdd(
-                            ReminderEntity(
-                                title = title,
-                                description = description,
-                                date = selectedDate,
-                                time = selectedTime,
-                                repeatType = repeatType,
-                                priority = priority,
-                                isAlertEnabled = isAlertEnabled
-                            )
-                        )
-                        Toast.makeText(context, "Reminder Added!", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text("Add", color = AppTeal, fontWeight = FontWeight.Bold)
-                    }
+                    Button(
+                        onClick = {
+                            if (title.isBlank()) { Toast.makeText(context, "Title is required", Toast.LENGTH_SHORT).show(); return@Button }
+                            onAdd(ReminderEntity(title = title, description = description, date = selectedDate, time = selectedTime, repeatType = repeatType, priority = priority, isAlertEnabled = isAlertEnabled))
+                            Toast.makeText(context, "Reminder Added!", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+                        shape = RoundedCornerShape(12.dp)
+                    ) { Text("Save") }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.Unspecified,
-                    actionIconContentColor = Color.Unspecified
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
-        modifier = Modifier.fillMaxSize()
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Title Field
-            Text("Title", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            Text("Details", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Reminder title", color = Color.LightGray) },
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.LightGray
-                )
+                value = title, onValueChange = { title = it }, modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("What should we remind you?") },
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryGreen, unfocusedBorderColor = Color.LightGray)
+            )
+            OutlinedTextField(
+                value = description, onValueChange = { description = it }, modifier = Modifier.fillMaxWidth().height(120.dp),
+                placeholder = { Text("Description (Optional)") },
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryGreen, unfocusedBorderColor = Color.LightGray)
             )
 
-            // Description Field
-            Text("Description", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                placeholder = { Text("Description", color = Color.LightGray) },
-                shape = RoundedCornerShape(8.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.LightGray
-                )
-            )
-
-            // Date Picker Field
-            Text("Date", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            OutlinedCard(
-                onClick = {
-                    val calendar = Calendar.getInstance()
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            val cal = Calendar.getInstance()
-                            cal.set(year, month, dayOfMonth)
-                            selectedDate = cal.timeInMillis
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.LightGray),
-                colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.CalendarToday, contentDescription = null, tint = AppTeal, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(dateFormatter.format(Date(selectedDate)), fontSize = 16.sp)
+            Text("Schedule", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ScheduleItem(icon = Icons.Default.CalendarToday, label = dateFormatter.format(Date(selectedDate)), modifier = Modifier.weight(1f)) {
+                    val cal = Calendar.getInstance(); DatePickerDialog(context, { _, y, m, d -> val c = Calendar.getInstance(); c.set(y, m, d); selectedDate = c.timeInMillis }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+                }
+                ScheduleItem(icon = Icons.Default.AccessTime, label = timeFormatter.format(Date(selectedTime)), modifier = Modifier.weight(1f)) {
+                    val cal = Calendar.getInstance(); TimePickerDialog(context, { _, h, m -> val c = Calendar.getInstance(); c.set(Calendar.HOUR_OF_DAY, h); c.set(Calendar.MINUTE, m); selectedTime = c.timeInMillis }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false).show()
                 }
             }
 
-            // Time Picker Field
-            Text("Time", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            OutlinedCard(
-                onClick = {
-                    val calendar = Calendar.getInstance()
-                    TimePickerDialog(
-                        context,
-                        { _, hourOfDay, minute ->
-                            val cal = Calendar.getInstance()
-                            cal.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                            cal.set(Calendar.MINUTE, minute)
-                            selectedTime = cal.timeInMillis
-                        },
-                        calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        false
-                    ).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color.LightGray),
-                colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.AccessTime, contentDescription = null, tint = AppTeal, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(timeFormatter.format(Date(selectedTime)), fontSize = 16.sp)
-                }
+            Text("Priority", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PriorityChoice(label = "High", isSelected = priority == "High") { priority = "High" }
+                PriorityChoice(label = "Medium", isSelected = priority == "Medium") { priority = "Medium" }
+                PriorityChoice(label = "Low", isSelected = priority == "Low") { priority = "Low" }
             }
 
-            // Repeat Option
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(AppTeal),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Default.Repeat, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Repeat", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Spacer(modifier = Modifier.height(10.dp))
+            Surface(shape = RoundedCornerShape(20.dp), color = Color.White, shadowElevation = 1.dp) {
+                Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Get notified", fontWeight = FontWeight.Bold, color = DarkText)
+                    Switch(checked = isAlertEnabled, onCheckedChange = { isAlertEnabled = it }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryGreen))
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
-                    repeatType = if (repeatType == "Daily") "None" else "Daily"
-                }) {
-                    Text(repeatType, color = Color.Gray)
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
-                }
-            }
-
-            // Priority Selection
-            Text("Priority", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                PriorityButton(label = "High", isSelected = priority == "High", onClick = { priority = "High" }, modifier = Modifier.weight(1f))
-                PriorityButton(label = "Medium", isSelected = priority == "Medium", onClick = { priority = "Medium" }, modifier = Modifier.weight(1f))
-                PriorityButton(label = "Low", isSelected = priority == "Low", onClick = { priority = "Low" }, modifier = Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Alert Switch
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Get alert for this task", color = Color.DarkGray)
-                Switch(
-                    checked = isAlertEnabled,
-                    onCheckedChange = { isAlertEnabled = it },
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = AppTeal)
-                )
             }
         }
     }
 }
 
 @Composable
-fun PriorityButton(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(40.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) AppTeal else Color.White,
-            contentColor = if (isSelected) Color.White else Color.Gray
-        ),
-        shape = RoundedCornerShape(8.dp),
-        border = if (!isSelected) BorderStroke(1.dp, Color.LightGray) else null,
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+fun ScheduleItem(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
+    Surface(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), color = Color.White, border = BorderStroke(1.dp, Color.LightGray)) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
-@Preview(showBackground = true, name = "Reminder Dashboard")
 @Composable
-fun ReminderDashboardPreview() {
-    MaterialTheme {
-        ReminderDashboardScreen(
-            reminders = listOf(
-                ReminderEntity(id = 1, title = "Task 1", description = "", date = 0, time = 0, repeatType = "", priority = "", isAlertEnabled = true)
-            ),
-            onBack = {},
-            onNavigateToList = {},
-            onAddNew = {}
-        )
+fun RowScope.PriorityChoice(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Surface(onClick = onClick, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(12.dp), color = if (isSelected) PrimaryGreen else Color.White, border = if (!isSelected) BorderStroke(1.dp, Color.LightGray) else null) {
+        Box(contentAlignment = Alignment.Center) { Text(label, color = if (isSelected) Color.White else Color.Gray, fontWeight = FontWeight.Bold) }
     }
 }
 
-@Preview(showBackground = true, name = "Reminder List")
+@Preview(showBackground = true)
 @Composable
-fun ReminderListPreview() {
-    MaterialTheme {
-        ReminderListScreen(
-            reminders = listOf(
-                ReminderEntity(
-                    id = 1,
-                    title = "Check Status",
-                    description = "Description",
-                    date = System.currentTimeMillis(),
-                    time = System.currentTimeMillis(),
-                    repeatType = "Daily",
-                    priority = "High",
-                    isAlertEnabled = true,
-                    isCompleted = false
-                ),
-                ReminderEntity(
-                    id = 2,
-                    title = "Update Story",
-                    description = "Description",
-                    date = System.currentTimeMillis(),
-                    time = System.currentTimeMillis(),
-                    repeatType = "None",
-                    priority = "Medium",
-                    isAlertEnabled = true,
-                    isCompleted = true
-                )
-            ),
-            onBack = {},
-            onAddNew = {},
-            onDelete = {},
-            onToggleCompletion = {}
-        )
-    }
+fun ReminderPreview() {
+    WhatsAppStatusSaverTheme { ReminderDashboardScreen(emptyList(), {}, {}, {}) }
 }

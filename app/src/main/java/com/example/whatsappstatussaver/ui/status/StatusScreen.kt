@@ -11,63 +11,28 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FolderSpecial
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,10 +46,13 @@ import com.example.whatsappstatussaver.R
 import com.example.whatsappstatussaver.data.models.MediaType
 import com.example.whatsappstatussaver.data.models.PlatformType
 import com.example.whatsappstatussaver.data.models.StatusMedia
+import com.example.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
-private val AppTeal = Color(0xFF00897B)
+private val PrimaryGreen = Color(0xFF00A884)
+private val SecondaryGreen = Color(0xFF005E4C)
+private val SoftGreen = Color(0xFFE7FFFA)
+private val DarkText = Color(0xFF1C2D2A)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusScreen(
     initialPlatform: PlatformType,
@@ -95,33 +63,15 @@ fun StatusScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     var selectedPlatform by rememberSaveable { mutableStateOf(initialPlatform) }
 
-    // Storage Access Framework Launcher
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
         if (uri != null) {
-            // Persist read and write access permissions for the selected folder
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             context.contentResolver.takePersistableUriPermission(uri, takeFlags)
             viewModel.checkPermissionAndLoad(selectedPlatform)
-        }
-    }
-
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) {}
-
-    LaunchedEffect(Unit) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            val isGranted = androidx.core.content.ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.POST_NOTIFICATIONS
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            if (!isGranted) {
-                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-            }
         }
     }
 
@@ -152,41 +102,16 @@ fun StatusScreen(
         onNavigateToViewer = onNavigateToViewer,
         onGrantPermission = {
             val authority = "com.android.externalstorage.documents"
-
-            // FIX: Explicit deep paths configured to point directly to the hidden .Statuses directory
             val documentId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
                 "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media/.Statuses"
             } else {
                 "primary:Android/media/com.whatsapp/WhatsApp/Media/.Statuses"
             }
-
-            // Generate the strictly formatted hint URI required by OpenDocumentTree contract
             val initialHintUri = DocumentsContract.buildDocumentUri(authority, documentId)
-
             try {
                 launcher.launch(initialHintUri)
             } catch (_: Exception) {
-                // Fallback 1: If OS prevents direct structural entry to hidden folder, default to Media
-                try {
-                    val mediaFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
-                        "primary:Android/media/com.whatsapp.w4b/WhatsApp Business/Media"
-                    } else {
-                        "primary:Android/media/com.whatsapp/WhatsApp/Media"
-                    }
-                    launcher.launch(DocumentsContract.buildDocumentUri(authority, mediaFallbackId))
-                } catch (_: Exception) {
-                    // Fallback 2: Fallback to root package directory
-                    try {
-                        val pkgFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
-                            "primary:Android/media/com.whatsapp.w4b"
-                        } else {
-                            "primary:Android/media/com.whatsapp"
-                        }
-                        launcher.launch(DocumentsContract.buildDocumentUri(authority, pkgFallbackId))
-                    } catch (_: Exception) {
-                        launcher.launch(null) // Final fallback to default storage root
-                    }
-                }
+                launcher.launch(null)
             }
         },
         onRefresh = { viewModel.checkPermissionAndLoad(selectedPlatform) },
@@ -210,138 +135,66 @@ fun StatusScreenContent(
     modifier: Modifier = Modifier
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
-
     val filteredStatuses = uiState.statuses.filter {
         if (selectedTab == 0) it.type == MediaType.IMAGE else it.type == MediaType.VIDEO
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(if (selectedTab == 0) "Photos" else "Videos",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp)
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateBack,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFE0F2F1))
-                    ) {
-                        Icon(Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp))
-                    }
-                },
-                actions = {
-                    if (uiState.isMultiSelectMode) {
-                        IconButton(onClick = onSaveSelected) {
-                            Icon(Icons.Default.Download, contentDescription = "Save Selected", tint = AppTeal)
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
-                )
+            StatusTopBar(
+                title = if (uiState.isMultiSelectMode) "${uiState.selectedMedia.size} Selected" 
+                        else if (selectedTab == 0) "Photos" else "Videos",
+                onBack = onNavigateBack,
+                isMultiSelect = uiState.isMultiSelectMode,
+                onSaveSelected = onSaveSelected
             )
         },
-        modifier = modifier.fillMaxSize()
+        containerColor = Color(0xFFFBFDFF)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
         ) {
             if (uiState.downloadProgress != null) {
                 LinearProgressIndicator(
                     progress = { uiState.downloadProgress },
                     modifier = Modifier.fillMaxWidth(),
-                    color = AppTeal,
-                    trackColor = Color(0xFFE0F2F1)
+                    color = PrimaryGreen,
+                    trackColor = SoftGreen
                 )
             }
 
             if (!uiState.isMultiSelectMode) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .height(44.dp)
-                        .background(Color(0xFFE0F2F1), RoundedCornerShape(8.dp))
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    PlatformButton(
-                        title = "WhatsApp",
-                        selected = selectedPlatform == PlatformType.WHATSAPP,
-                        onClick = { onPlatformChange(PlatformType.WHATSAPP) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    PlatformButton(
-                        title = "WhatsApp Business",
-                        selected = selectedPlatform == PlatformType.WHATSAPP_BUSINESS,
-                        onClick = { onPlatformChange(PlatformType.WHATSAPP_BUSINESS) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                PlatformSwitcher(
+                    selectedPlatform = selectedPlatform,
+                    onPlatformChange = onPlatformChange
+                )
 
-                // Media Type Tabs
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = Color.White,
-                    contentColor = AppTeal,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = AppTeal
-                        )
-                    },
-                    divider = {}
-                ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text("Photos", fontWeight = if(selectedTab == 0) FontWeight.Bold else FontWeight.Medium) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text("Videos", fontWeight = if(selectedTab == 1) FontWeight.Bold else FontWeight.Medium) }
-                    )
-                }
+                MediaTabs(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
             }
 
-            // Content Container
             Box(modifier = Modifier.fillMaxSize()) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = AppTeal)
-                } else if (!uiState.isAppInstalled) {
-                    val appName = if (selectedPlatform == PlatformType.WHATSAPP) "WhatsApp" else "WhatsApp Business"
-                    EmptyState(
-                        message = "$appName is not installed on your device.",
-                        buttonText = "Refresh",
-                        onRefresh = onRefresh
+                when {
+                    uiState.isLoading -> CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center), 
+                        color = PrimaryGreen
                     )
-                } else if (!uiState.hasPermission) {
-                    PermissionGuide(
-                        platform = selectedPlatform,
-                        onGrant = onGrantPermission
+                    !uiState.isAppInstalled -> StatusEmptyState(
+                        message = "${if (selectedPlatform == PlatformType.WHATSAPP) "WhatsApp" else "Business"} not installed.",
+                        onAction = onRefresh,
+                        buttonText = "Refresh"
                     )
-                } else if (filteredStatuses.isEmpty()) {
-                    EmptyState(
+                    !uiState.hasPermission -> StatusPermissionGuide(onGrantPermission)
+                    filteredStatuses.isEmpty() -> StatusEmptyState(
                         message = "No ${if (selectedTab == 0) "Photos" else "Videos"} found.",
-                        buttonText = "Refresh",
-                        onRefresh = onRefresh
+                        onAction = onRefresh,
+                        buttonText = "Check Again"
                     )
-                } else {
-                    MediaGrid(
+                    else -> MediaGrid(
                         mediaList = filteredStatuses,
                         selectedMedia = uiState.selectedMedia,
                         isMultiSelectMode = uiState.isMultiSelectMode,
@@ -355,58 +208,155 @@ fun StatusScreenContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PermissionGuide(platform: PlatformType, onGrant: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+private fun StatusTopBar(
+    title: String,
+    onBack: () -> Unit,
+    isMultiSelect: Boolean,
+    onSaveSelected: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(110.dp)
+            .background(
+                brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
+                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
-        Icon(Icons.Default.FolderSpecial, contentDescription = null, modifier = Modifier.size(64.dp), tint = AppTeal)
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Storage Permission Needed",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(
-            onClick = onGrant,
-            colors = ButtonDefaults.buttonColors(containerColor = AppTeal),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(50.dp)
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Grant Permission", fontWeight = FontWeight.Bold)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        if (isMultiSelect) {
+            IconButton(
+                onClick = onSaveSelected,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f))
+            ) {
+                Icon(Icons.Default.Download, contentDescription = "Save All", tint = Color.White)
+            }
         }
     }
 }
 
 @Composable
-fun PlatformButton(
+private fun PlatformSwitcher(
+    selectedPlatform: PlatformType,
+    onPlatformChange: (PlatformType) -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        shadowElevation = 4.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PlatformToggle(
+                title = "WhatsApp",
+                isSelected = selectedPlatform == PlatformType.WHATSAPP,
+                onClick = { onPlatformChange(PlatformType.WHATSAPP) },
+                modifier = Modifier.weight(1f)
+            )
+            PlatformToggle(
+                title = "Business",
+                isSelected = selectedPlatform == PlatformType.WHATSAPP_BUSINESS,
+                onClick = { onPlatformChange(PlatformType.WHATSAPP_BUSINESS) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PlatformToggle(
     title: String,
-    selected: Boolean,
+    isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(6.dp))
-            .background(if (selected) AppTeal else Color.Transparent)
+            .height(44.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isSelected) PrimaryGreen else Color.Transparent)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = title,
-            color = if (selected) Color.White else AppTeal,
+            color = if (isSelected) Color.White else DarkText,
             fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
+            fontSize = 14.sp
         )
     }
 }
 
 @Composable
-fun MediaGrid(
+private fun MediaTabs(selectedTab: Int, onTabSelected: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        TabItem(label = "Photos", isSelected = selectedTab == 0, onClick = { onTabSelected(0) })
+        TabItem(label = "Videos", isSelected = selectedTab == 1, onClick = { onTabSelected(1) })
+    }
+}
+
+@Composable
+private fun TabItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+            color = if (isSelected) PrimaryGreen else Color.Gray
+        )
+        if (isSelected) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(PrimaryGreen)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MediaGrid(
     mediaList: List<StatusMedia>,
     selectedMedia: Set<String>,
     isMultiSelectMode: Boolean,
@@ -416,24 +366,21 @@ fun MediaGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
-        contentPadding = PaddingValues(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize()
     ) {
         items(mediaList) { media ->
-            MediaItem(
+            StatusMediaItem(
                 media = media,
                 isSelected = selectedMedia.contains(media.uri.toString()),
                 isMultiSelectMode = isMultiSelectMode,
                 onSave = { onSave(media) },
                 onToggleSelection = { onToggleSelection(media) },
                 onClick = {
-                    if (isMultiSelectMode) {
-                        onToggleSelection(media)
-                    } else {
-                        onNavigateToViewer(media.uri.toString(), media.type, media.name)
-                    }
+                    if (isMultiSelectMode) onToggleSelection(media)
+                    else onNavigateToViewer(media.uri.toString(), media.type, media.name)
                 }
             )
         }
@@ -442,7 +389,7 @@ fun MediaGrid(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MediaItem(
+private fun StatusMediaItem(
     media: StatusMedia,
     isSelected: Boolean,
     isMultiSelectMode: Boolean,
@@ -451,96 +398,65 @@ fun MediaItem(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-
-    Box(
+    Surface(
         modifier = Modifier
-            .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFFE0E0E0))
+            .aspectRatio(0.85f)
+            .clip(RoundedCornerShape(24.dp)),
+        shadowElevation = 4.dp
     ) {
-        // Main Image/Video Content
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = onToggleSelection
-                )
+                .combinedClickable(onClick = onClick, onLongClick = onToggleSelection)
         ) {
-            if (media.type == MediaType.VIDEO) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(media.uri)
-                        .decoderFactory(VideoFrameDecoder.Factory())
-                        .videoFrameMillis(1000)
-                        .crossfade(true)
-                        .size(512)
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                Icon(
-                    Icons.Default.PlayCircle,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.8f),
-                    modifier = Modifier.size(36.dp).align(Alignment.Center)
-                )
-            } else {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(media.uri)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(media.uri)
+                    .decoderFactory(VideoFrameDecoder.Factory())
+                    .videoFrameMillis(1000)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
 
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
-                    .clickable { onToggleSelection() }
-            )
-            Icon(
-                Icons.Default.CheckCircle,
-                contentDescription = "Selected",
-                tint = AppTeal,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            )
-        } else {
-            if (!isMultiSelectMode) {
-                Row(
+            if (media.type == MediaType.VIDEO) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(40.dp)
+                        .background(Color.Black.copy(alpha = 0.4f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                }
+            }
+
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(PrimaryGreen.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
+                }
+            } else if (!isMultiSelectMode) {
+                IconButton(
+                    onClick = onSave,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                 ) {
-                    // Quick Save Button
-                    IconButton(
-                        onClick = {
-                            Log.d("StatusScreen", "Grid Save Clicked")
-                            Toast.makeText(context, "Saving...", Toast.LENGTH_SHORT).show()
-                            onSave()
-                        },
-                        modifier = Modifier
-                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                            .size(32.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.import_icon),
-                            contentDescription = "Save",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.import_icon),
+                        contentDescription = "Save",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -548,51 +464,70 @@ fun MediaItem(
 }
 
 @Composable
-fun EmptyState(
-    message: String,
-    buttonText: String,
-    onRefresh: () -> Unit
-) {
+private fun StatusEmptyState(message: String, onAction: () -> Unit, buttonText: String) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = message,
-            color = Color.DarkGray,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(horizontal = 32.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
+        Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(80.dp), tint = Color.LightGray)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = message, textAlign = TextAlign.Center, color = Color.Gray, fontSize = 16.sp)
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = onRefresh,
-            colors = ButtonDefaults.buttonColors(containerColor = AppTeal),
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.height(44.dp).padding(horizontal = 32.dp)
+            onClick = onAction,
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Text(buttonText, fontWeight = FontWeight.Bold)
         }
     }
 }
 
-// ==================== PREVIEWS ====================
-
-@ExperimentalMaterial3Api
-@Preview(showBackground = true, name = "Full Screen - Data")
 @Composable
-fun StatusScreenDataPreview() {
-    MaterialTheme {
+private fun StatusPermissionGuide(onGrant: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier.size(100.dp).background(SoftGreen, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(48.dp), tint = PrimaryGreen)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            "Access Required",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = DarkText
+        )
+        Text(
+            "We need permission to access WhatsApp status folder to show you photos and videos.",
+            textAlign = TextAlign.Center,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Button(
+            onClick = onGrant,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
+            shape = RoundedCornerShape(18.dp)
+        ) {
+            Text("Grant Permission", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun StatusScreenPreview() {
+    WhatsAppStatusSaverTheme {
         StatusScreenContent(
-            uiState = StatusUiState(
-                statuses = listOf(
-                    StatusMedia(Uri.EMPTY, "status1.jpg", MediaType.IMAGE, 1024, 0, PlatformType.WHATSAPP),
-                    StatusMedia(Uri.EMPTY, "status2.mp4", MediaType.VIDEO, 2048, 0, PlatformType.WHATSAPP),
-                    StatusMedia(Uri.EMPTY, "status3.jpg", MediaType.IMAGE, 1024, 0, PlatformType.WHATSAPP)
-                ),
-                hasPermission = true
-            ),
+            uiState = StatusUiState(hasPermission = true),
             selectedPlatform = PlatformType.WHATSAPP,
             onPlatformChange = {},
             onNavigateBack = {},
@@ -603,144 +538,5 @@ fun StatusScreenDataPreview() {
             onGrantPermission = {},
             onRefresh = {}
         )
-    }
-}
-
-@ExperimentalMaterial3Api
-@Preview(showBackground = true, name = "Full Screen - Loading")
-@Composable
-fun StatusScreenLoadingPreview() {
-    MaterialTheme {
-        StatusScreenContent(
-            uiState = StatusUiState(isLoading = true),
-            selectedPlatform = PlatformType.WHATSAPP,
-            onPlatformChange = {},
-            onNavigateBack = {},
-            onSaveSelected = {},
-            onSaveSingle = {},
-            onToggleSelection = {},
-            onNavigateToViewer = { _, _, _ -> },
-            onGrantPermission = {},
-            onRefresh = {}
-        )
-    }
-}
-
-@ExperimentalMaterial3Api
-@Preview(showBackground = true, name = "Full Screen - No Permission")
-@Composable
-fun StatusScreenNoPermissionPreview() {
-    MaterialTheme {
-        StatusScreenContent(
-            uiState = StatusUiState(hasPermission = false),
-            selectedPlatform = PlatformType.WHATSAPP,
-            onPlatformChange = {},
-            onNavigateBack = {},
-            onSaveSelected = {},
-            onSaveSingle = {},
-            onToggleSelection = {},
-            onNavigateToViewer = { _, _, _ -> },
-            onGrantPermission = {},
-            onRefresh = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Permission Guide")
-@Composable
-fun PermissionGuidePreview() {
-    MaterialTheme {
-        PermissionGuide(platform = PlatformType.WHATSAPP, onGrant = {})
-    }
-}
-
-@Preview(showBackground = true, name = "Platform Buttons")
-@Composable
-fun PlatformButtonsPreview() {
-    MaterialTheme {
-        Row(modifier = Modifier.padding(16.dp).height(44.dp)) {
-            PlatformButton(title = "WhatsApp", selected = true, onClick = {}, modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(8.dp))
-            PlatformButton(title = "Business", selected = false, onClick = {}, modifier = Modifier.weight(1f))
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Media Item - Image")
-@Composable
-fun MediaItemImagePreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.size(120.dp).padding(8.dp)) {
-            MediaItem(
-                media = StatusMedia(Uri.EMPTY, "img.jpg", MediaType.IMAGE, 0, 0, PlatformType.WHATSAPP),
-                isSelected = false,
-                isMultiSelectMode = false,
-                onSave = {},
-                onToggleSelection = {},
-                onClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Media Item - Video")
-@Composable
-fun MediaItemVideoPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.size(120.dp).padding(8.dp)) {
-            MediaItem(
-                media = StatusMedia(Uri.EMPTY, "vid.mp4", MediaType.VIDEO, 0, 0, PlatformType.WHATSAPP),
-                isSelected = false,
-                isMultiSelectMode = false,
-                onSave = {},
-                onToggleSelection = {},
-                onClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Media Item - Selected")
-@Composable
-fun MediaItemSelectedPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.size(120.dp).padding(8.dp)) {
-            MediaItem(
-                media = StatusMedia(Uri.EMPTY, "img.jpg", MediaType.IMAGE, 0, 0, PlatformType.WHATSAPP),
-                isSelected = true,
-                isMultiSelectMode = true,
-                onSave = {},
-                onToggleSelection = {},
-                onClick = {}
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true, name = "Media Grid")
-@Composable
-fun MediaGridPreview() {
-    MaterialTheme {
-        MediaGrid(
-            mediaList = listOf(
-                StatusMedia(Uri.EMPTY, "1.jpg", MediaType.IMAGE, 0, 0, PlatformType.WHATSAPP),
-                StatusMedia(Uri.EMPTY, "2.mp4", MediaType.VIDEO, 0, 0, PlatformType.WHATSAPP),
-                StatusMedia(Uri.EMPTY, "3.jpg", MediaType.IMAGE, 0, 0, PlatformType.WHATSAPP),
-                StatusMedia(Uri.EMPTY, "4.mp4", MediaType.VIDEO, 0, 0, PlatformType.WHATSAPP)
-            ),
-            selectedMedia = emptySet(),
-            isMultiSelectMode = false,
-            onSave = {},
-            onToggleSelection = {},
-            onNavigateToViewer = { _, _, _ -> }
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Empty State")
-@Composable
-fun EmptyStatePreview() {
-    MaterialTheme {
-        EmptyState(message = "No Photos found.", buttonText = "Refresh", onRefresh = {})
     }
 }
