@@ -51,23 +51,24 @@ fun SplashScreen(onSplashScreenFinished: () -> Unit) {
             )
         )
         // Background and logo alpha
-        alpha.animateTo(1f, animationSpec = tween(800))
-        
+        alpha.animateTo(1f,
+            animationSpec = tween(800))
+
         // Staggered text appearance
         delay(300.milliseconds)
-        textAlpha.animateTo(1f, animationSpec = tween(1000))
-        
-        delay(2000)
+        textAlpha.animateTo(1f,
+            animationSpec = tween(1000))
+
+        delay(2000.milliseconds)
         onSplashScreenFinished()
     }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF00BFA5),
+                        Color(0xFF80CBC4),
                         Color(0xFF00897B),
                         Color(0xFF00695C)
                     )
@@ -77,7 +78,6 @@ fun SplashScreen(onSplashScreenFinished: () -> Unit) {
     ) {
         // Decorative background elements
         BackgroundDecorations()
-
         Column(
             modifier = Modifier.systemBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,27 +92,25 @@ fun SplashScreen(onSplashScreenFinished: () -> Unit) {
                         .alpha(0.15f * alpha.value)
                         .background(Color.White, CircleShape)
                 )
-                
+
                 // Main Logo Container
                 Box(
                     modifier = Modifier
                         .size(110.dp)
                         .scale(scale.value)
                         .alpha(alpha.value)
-                        .background(Color.White, CircleShape),
+                        .background(Color(0xFF00897B), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                        painter = painterResource(id = R.drawable.import_icon),
                         contentDescription = "Logo",
-                        tint = Color(0xFF00897B),
+                        tint = Color(0xFFFFFFFF),
                         modifier = Modifier.size(75.dp)
                     )
                 }
             }
-            
             Spacer(modifier = Modifier.height(32.dp))
-            
             Text(
                 text = "STATUS SAVER",
                 color = Color.White,
