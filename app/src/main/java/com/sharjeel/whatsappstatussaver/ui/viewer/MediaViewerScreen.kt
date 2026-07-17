@@ -7,14 +7,19 @@ import android.net.Uri
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.OptIn
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +35,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +54,8 @@ import com.sharjeel.whatsappstatussaver.data.models.StatusMedia
 import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 import kotlinx.coroutines.launch
 import java.io.File
+import com.sharjeel.whatsappstatussaver.R
+import kotlin.time.Duration.Companion.milliseconds
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
@@ -72,7 +80,7 @@ private fun copyUriToCache(context: Context, uri: Uri): Uri {
                 uri
             }
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         uri
     }
 }
@@ -119,7 +127,47 @@ fun MediaViewerScreen(
         } else null
     }
 
-    DisposableEffect(exoPlayer) { onDispose { exoPlayer?.release() } }
+    var isPlaying by remember { mutableStateOf(true) }
+    var isControlsVisible by remember { mutableStateOf(true) }
+    var playbackPosition by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+
+    // Update progress
+    LaunchedEffect(isPlaying, isControlsVisible) {
+        if (isPlaying && isControlsVisible) {
+            while (true) {
+                playbackPosition = exoPlayer?.currentPosition?.coerceAtLeast(0L) ?: 0L
+                duration = exoPlayer?.duration?.coerceAtLeast(0L) ?: 0L
+                kotlinx.coroutines.delay(500.milliseconds)
+            }
+        }
+    }
+
+    // Auto-hide controls after 3 seconds of inactivity if playing
+    LaunchedEffect(isControlsVisible, isPlaying) {
+        if (isControlsVisible && isPlaying) {
+            kotlinx.coroutines.delay(3000.milliseconds)
+            isControlsVisible = false
+        }
+    }
+
+    DisposableEffect(exoPlayer) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY) {
+                    duration = exoPlayer?.duration?.coerceAtLeast(0L) ?: 0L
+                }
+            }
+        }
+        exoPlayer?.addListener(listener)
+        onDispose {
+            exoPlayer?.removeListener(listener)
+            exoPlayer?.release()
+        }
+    }
 
     Scaffold(
         topBar = { ViewerTopBar(title = if (statusMedia.type == MediaType.VIDEO) "Video" else "Photo", onBack = onNavigateBack) },
@@ -133,7 +181,7 @@ fun MediaViewerScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    ViewerActionButton(icon = Icons.AutoMirrored.Filled.Chat, label = "Send", color = PrimaryGreen) {
+                    ViewerActionButton(icon = ImageVector.vectorResource(id = R.drawable.navigate_icon), label = "Send", color = PrimaryGreen) {
                         checkAndShare { platform ->
                             coroutineScope.launch {
                                 val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
@@ -154,7 +202,7 @@ fun MediaViewerScreen(
                         }
                     }
 
-                    ViewerActionButton(icon = Icons.Default.Share, label = "Share", color = Color(0xFF2196F3)) {
+                    ViewerActionButton(icon = ImageVector.vectorResource(id = R.drawable.share_line_icon), label = "Share", color = Color(0xFF2196F3)) {
                         coroutineScope.launch {
                             try {
                                 var finalUri = statusMedia.uri
@@ -171,7 +219,8 @@ fun MediaViewerScreen(
                         }
                     }
 
-                    ViewerActionButton(icon = Icons.Default.Download, label = "Save", color = Color(0xFF4CAF50)) {
+                    ViewerActionButton(icon = ImageVector.vectorResource(id = R.drawable.import_icon),
+                        label = "Save", color = Color(0xFF4CAF50)) {
                         try { onSaveMedia(statusMedia); Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show() } catch (e: Exception) { }
                     }
                 }
@@ -182,12 +231,155 @@ fun MediaViewerScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
             if (statusMedia.type == MediaType.VIDEO) {
                 if (isInspectionMode) {
-                    Icon(Icons.Default.PlayCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(64.dp))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.PlayCircle,
+                            contentDescription = null, tint = Color.White,
+                            modifier = Modifier.size(64.dp))
+                        PlaybackControls(
+                            isPlaying = true,
+                            onPlayPauseToggle = {},
+                            onForward = {},
+                            onBackward = {},
+                            onSkipNext = {},
+                            onSkipPrevious = {},
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 } else {
-                    AndroidView(factory = { ctx -> PlayerView(ctx).apply { player = exoPlayer; useController = true; setBackgroundColor(android.graphics.Color.BLACK) } }, modifier = Modifier.fillMaxSize())
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                isControlsVisible = !isControlsVisible
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AndroidView(factory = { ctx ->
+                            PlayerView(ctx).apply {
+                                player = exoPlayer
+                                useController = false
+                                setBackgroundColor(android.graphics.Color.BLACK)
+                            }
+                        }, modifier = Modifier.fillMaxSize())
+                        
+                        AnimatedVisibility(
+                            visible = isControlsVisible,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            val formatTime = { ms: Long ->
+                                val seconds = (ms / 1000) % 60
+                                val minutes = (ms / (1000 * 60)) % 60
+                                java.util.Locale.getDefault().let { locale ->
+                                    String.format(locale, "%02d:%02d", minutes, seconds)
+                                }
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.35f))
+                            ) {
+                                // Center Playback Controls (Standalone)
+                                PlaybackControls(
+                                    isPlaying = isPlaying,
+                                    onPlayPauseToggle = {
+                                        if (isPlaying) exoPlayer?.pause() else exoPlayer?.play()
+                                    },
+                                    onForward = {
+                                        exoPlayer?.seekTo(exoPlayer.currentPosition + 15000L)
+                                    },
+                                    onBackward = {
+                                        exoPlayer?.seekTo(exoPlayer.currentPosition - 5000L)
+                                    },
+                                    onSkipNext = {
+                                        exoPlayer?.seekTo(exoPlayer.duration)
+                                    },
+                                    onSkipPrevious = {
+                                        exoPlayer?.seekTo(0L)
+                                    },
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+
+                                // Bottom Progress and Time (Separated Section)
+                                Column(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, end = 16.dp)
+                                        .background(Color.Black.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                                        .padding(top = 8.dp, bottom = 12.dp, start = 12.dp, end = 12.dp)
+                                ) {
+                                    val sliderInteractionSource = remember { MutableInteractionSource() }
+                                    val isPressed by sliderInteractionSource.collectIsPressedAsState()
+                                    val isDragged by sliderInteractionSource.collectIsDraggedAsState()
+                                    val isInteracting = isPressed || isDragged
+                                    
+                                    val thumbSize by animateDpAsState(
+                                        targetValue = if (isInteracting) 20.dp else 14.dp,
+                                        label = "thumbSize"
+                                    )
+
+                                    Slider(
+                                        value = if (duration > 0) playbackPosition.toFloat() / duration.toFloat() else 0f,
+                                        onValueChange = { 
+                                            val seekPos = (it * duration).toLong()
+                                            exoPlayer?.seekTo(seekPos)
+                                            playbackPosition = seekPos
+                                        },
+                                        interactionSource = sliderInteractionSource,
+                                        track = { sliderState ->
+                                            SliderDefaults.Track(
+                                                sliderState = sliderState,
+                                                modifier = Modifier.height(if (isInteracting) 6.dp else 4.dp),
+                                                colors = SliderDefaults.colors(
+                                                    activeTrackColor = PrimaryGreen,
+                                                    inactiveTrackColor = PrimaryGreen.copy(alpha = 0.25f)
+                                                )
+                                            )
+                                        },
+                                        thumb = {
+                                            Surface(
+                                                modifier = Modifier.size(thumbSize),
+                                                shape = CircleShape,
+                                                color = PrimaryGreen,
+                                                shadowElevation = if (isInteracting) 8.dp else 4.dp
+                                            ) {}
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${formatTime(playbackPosition)} / ${formatTime(duration)}",
+                                            color = Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        
+                                        IconButton(onClick = { /* Settings Action */ }) {
+                                            Icon(
+                                                Icons.Default.Settings,
+                                                contentDescription = "Settings",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(22.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
-                var scale by remember { mutableStateOf(1f) }
+                var scale by remember { mutableFloatStateOf(1f) }
                 var offset by remember { mutableStateOf(Offset.Zero) }
                 AsyncImage(
                     model = statusMedia.uri, contentDescription = null, contentScale = ContentScale.Fit,
@@ -208,7 +400,6 @@ fun MediaViewerScreen(
                 }
             }
         }
-
         if (showPlatformDialog) {
             AlertDialog(
                 onDismissRequest = { showPlatformDialog = false },
@@ -230,10 +421,12 @@ private fun ViewerTopBar(title: String, onBack: () -> Unit) {
     ) {
         Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.2f))) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back", tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = title, style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
@@ -242,12 +435,72 @@ private fun ViewerTopBar(title: String, onBack: () -> Unit) {
 private fun ViewerActionButton(icon: ImageVector, label: String, color: Color, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         IconButton(onClick = onClick, modifier = Modifier.size(56.dp).background(color, CircleShape)) {
-            Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Icon(icon, contentDescription = null,
+                tint = Color.White, modifier = Modifier.size(24.dp))
         }
-        Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold)
     }
 }
 
+@Composable
+private fun PlaybackControls(
+    isPlaying: Boolean,
+    onPlayPauseToggle: () -> Unit,
+    onForward: () -> Unit,
+    onBackward: () -> Unit,
+    onSkipNext: () -> Unit,
+    onSkipPrevious: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Skip Previous
+        IconButton(onClick = onSkipPrevious) {
+            Icon(ImageVector.vectorResource(id = R.drawable.step_backward_icon),
+                contentDescription = null, tint = Color.White,
+                modifier = Modifier.size(25.dp))
+        }
+
+        // Replay (Backward 5s)
+        IconButton(onClick = onBackward) {
+            Icon(ImageVector.vectorResource(id = R.drawable.reset_update_icon),
+                contentDescription = null, tint = Color.White,
+                modifier = Modifier.size(28.dp))
+        }
+
+        // Play/Pause (Circular White Background)
+        IconButton(
+            onClick = onPlayPauseToggle,
+            modifier = Modifier.size(64.dp).background(Color.White, CircleShape)
+        ) {
+            Icon(
+                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = Color.Black,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        
+        // Forward (Forward 15s)
+        IconButton(onClick = onForward) {
+            Icon(ImageVector.vectorResource(id = R.drawable.forward_restore_icon__1_),
+                contentDescription = null, tint = Color.White,
+                modifier = Modifier.size(28.dp))
+        }
+        
+        // Skip Next
+        IconButton(onClick = onSkipNext) {
+            Icon(ImageVector.vectorResource(id = R.drawable.step_forward_icon),
+                contentDescription = null,
+                tint = Color.White, modifier = Modifier.size(25.dp))
+        }
+    }
+}
 @OptIn(UnstableApi::class)
 @Preview(showBackground = true)
 @Composable
@@ -257,3 +510,92 @@ fun MediaViewerScreenPreview() {
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+fun ViewerActionButtonPreview() {
+    WhatsAppStatusSaverTheme {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ViewerActionButton(
+                icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
+                label = "Send",
+                color = PrimaryGreen,
+                onClick = {}
+            )
+            ViewerActionButton(
+                icon = ImageVector.vectorResource(id = R.drawable.share_line_icon),
+                label = "Share",
+                color = Color(0xFF2196F3),
+                onClick = {}
+            )
+            ViewerActionButton(
+                icon = ImageVector.vectorResource(id = R.drawable.import_icon),
+                label = "Save",
+                color = Color(0xFF4CAF50),
+                onClick = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+fun VideoPlaybackPreview() {
+    WhatsAppStatusSaverTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Text("Video Playback Icons", color = Color.White, fontWeight = FontWeight.Bold)
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Skip Previous
+                IconButton(onClick = {}) {
+                    Icon(ImageVector.vectorResource(id = R.drawable.step_backward_icon),
+                        contentDescription = null, tint = Color.White,
+                        modifier = Modifier.size(28.dp))
+                }
+                
+                // Replay
+                IconButton(onClick = {}) {
+                    Icon(ImageVector.vectorResource(id = R.drawable.reset_update_icon),
+                        contentDescription = null, tint = Color.White,
+                        modifier = Modifier.size(28.dp))
+                }
+                
+                // Play/Pause (Circular White Background)
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier.size(64.dp).background(Color.White, CircleShape)
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.Black,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+                // Forward
+                IconButton(onClick = {}) {
+                    Icon(ImageVector.vectorResource(id = R.drawable.forward_restore_icon__1_),
+                        contentDescription = null, tint = Color.White,
+                        modifier = Modifier.size(28.dp))
+                }
+                // Skip Next
+                IconButton(onClick = {}) {
+                    Icon(ImageVector.vectorResource(id = R.drawable.step_forward_icon),
+                        contentDescription = null,
+                        tint = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+    }
+}
