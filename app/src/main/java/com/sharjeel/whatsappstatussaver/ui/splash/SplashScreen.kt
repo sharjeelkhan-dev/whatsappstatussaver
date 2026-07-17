@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.sharjeel.whatsappstatussaver.R
 import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun SplashScreen(onSplashScreenFinished: () -> Unit) {
@@ -53,7 +54,7 @@ fun SplashScreen(onSplashScreenFinished: () -> Unit) {
         alpha.animateTo(1f, animationSpec = tween(800))
         
         // Staggered text appearance
-        delay(300)
+        delay(300.milliseconds)
         textAlpha.animateTo(1f, animationSpec = tween(1000))
         
         delay(2000)

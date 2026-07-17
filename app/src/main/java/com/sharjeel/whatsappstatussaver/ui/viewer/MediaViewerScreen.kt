@@ -4,7 +4,6 @@ package com.sharjeel.whatsappstatussaver.ui.viewer
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.annotation.OptIn

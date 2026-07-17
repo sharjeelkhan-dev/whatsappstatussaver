@@ -2,7 +2,6 @@ package com.sharjeel.whatsappstatussaver.domain.usecase
 
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.transformer.Composition
@@ -15,7 +14,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class CompressVideoUseCase @Inject constructor(
     @ApplicationContext private val context: Context

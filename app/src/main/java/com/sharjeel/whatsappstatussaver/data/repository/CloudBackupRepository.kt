@@ -5,7 +5,6 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
