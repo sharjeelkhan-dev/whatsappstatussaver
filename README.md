@@ -15,14 +15,14 @@
 <br/>
 <table width="100%">
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/ea952ad4-51cf-4dc0-8a8e-6bf34b9965da" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/486afc71-ad9c-4d19-910f-0a1ad6a370f4" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/50509445-164d-431d-8d9b-eb54e6c5a9db" width="100%" alt="Screen 3" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/03e56704-5682-4c62-8e16-f95b7e967d13" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/37c83ad6-fb43-4a11-89b7-a66b70b36839" width="100%" alt="Screen 2" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/45eb4959-8596-4644-a98f-085d043f5588" width="100%" alt="Screen 3" /></td>
   </tr>
   <tr>
-    <td width="33.3%  align="center><img  src="https://github.com/user-attachments/assets/49265bbb-4414-45ba-b716-6b5f819b82f7" width="100%" alt="Screen 4" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/f8ce2b1b-11e1-44b0-b1b5-8ed3cae1b889" width="100%" alt="Screen 5" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/4a1cfdae-8407-4ff1-90c7-e9dba78967d0" width="100%" alt="Screen 6" /></td>
+    <td width="33.3%  align="center><img  src="https://github.com/user-attachments/assets/fbf5d492-431d-4754-809d-eff86f03309f" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/e4aa17fa-15c6-4da5-96ad-87acadbe04c9" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/68510d63-dca6-4d73-be08-24a1f088a6b5" width="100%" alt="Screen 6" /></td>
   </tr>
 </table>
 </details>
