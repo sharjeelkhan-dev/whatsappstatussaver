@@ -24,6 +24,7 @@ sealed class Screen(val route: String) {
     object Reminder : Screen("reminder")
     object Settings : Screen("settings")
     object Splash : Screen("splash")
+    object AiAssistant : Screen("ai_assistant")
 
     object MediaViewer : Screen("viewer?uri={uri}&type={type}&name={name}&platform={platform}") {
         fun createRoute(uri: String, type: MediaType, name: String, platform: PlatformType): String {
@@ -62,8 +63,12 @@ fun WhatsAppStatusSaverNavHost(
                 onNavigateToDirectChat = { navController.navigate(Screen.DirectChat.route) },
                 onNavigateToSavedFiles = { navController.navigate(Screen.SavedFiles.route) },
                 onNavigateToReminder = { navController.navigate(Screen.Reminder.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToAiAssistant = { navController.navigate(Screen.AiAssistant.route) }
             )
+        }
+        composable(Screen.AiAssistant.route) {
+            com.sharjeel.whatsappstatussaver.ui.ai.AiAssistantScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Screen.Status.route,

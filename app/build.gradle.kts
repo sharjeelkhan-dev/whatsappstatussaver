@@ -31,7 +31,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true // Enabled for AI Configs
       shaders = false
     }
 
@@ -49,7 +49,6 @@ kotlin {
 dependencies {
   val composeBom = platform(libs.androidx.compose.bom)
   implementation(composeBom)
-  androidTestImplementation(composeBom)
 
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
@@ -115,6 +114,9 @@ dependencies {
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.auth)
   implementation(libs.firebase.storage)
+  implementation(libs.firebase.analytics)
+  implementation(libs.firebase.ai)
+  implementation(libs.firebase.appcheck.debug)
   implementation(libs.billing.ktx)
 
   // Network (Retrofit & Moshi)

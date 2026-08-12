@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -74,6 +73,7 @@ fun HomeScreen(
     onNavigateToSavedFiles: () -> Unit,
     onNavigateToReminder: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToAiAssistant: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -139,7 +139,8 @@ fun HomeScreen(
                 ToolsSection(
                     onDirectChat = onNavigateToDirectChat,
                     onSavedFiles = onNavigateToSavedFiles,
-                    onReminder = { checkAndNavigateToReminder() }
+                    onReminder = { checkAndNavigateToReminder() },
+                    onAiAssistant = onNavigateToAiAssistant
                 )
             }
         }
@@ -181,12 +182,11 @@ private fun HeaderSection(onSettingsClick: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 15.dp)
-                .background(Color.White.copy(alpha = 0.2f), CircleShape)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.setting_icon),
                 contentDescription = "Settings",
-                modifier = Modifier.size(25.dp),
+                modifier = Modifier.size(24.dp),
                 tint = Color.White
             )
         }
@@ -228,7 +228,8 @@ private fun PlatformSection(onPlatformClick: (PlatformType) -> Unit) {
 private fun ToolsSection(
     onDirectChat: () -> Unit,
     onSavedFiles: () -> Unit,
-    onReminder: () -> Unit
+    onReminder: () -> Unit,
+    onAiAssistant: () -> Unit
 ) {
     val context = LocalContext.current
     Column(
@@ -242,17 +243,10 @@ private fun ToolsSection(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             val tools = listOf(
+                Triple("AI Magic", R.drawable.ai_sparkles_icon, onAiAssistant),
                 Triple("DirectChat", R.drawable.navigate_icon, onDirectChat),
                 Triple("Gallery", R.drawable.picture_icon, onSavedFiles),
                 Triple("Reminder", R.drawable.alarm_clock_icon, onReminder),
-                Triple("Share", R.drawable.share_line_icon) {
-                    val sendIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, "Check out this WhatsApp Status Saver!")
-                        type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(sendIntent, null))
-                }
             )
 
             tools.forEach { (title, iconRes, onClick) ->
@@ -411,6 +405,6 @@ private fun PermissionDialog(onDismiss: () -> Unit, onOpenSettings: () -> Unit) 
 @Composable
 fun HomeScreenPreview() {
     WhatsAppStatusSaverTheme {
-        HomeScreen({}, {}, {}, {}, {})
+        HomeScreen({}, {}, {}, {}, {}, {})
     }
 }

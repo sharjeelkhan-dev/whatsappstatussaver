@@ -24,7 +24,7 @@ dataStore = "1.2.1"
 ksp = "2.3.9"
 androidxSplashScreen = "1.2.0"
 googleServices = "4.4.2"
-firebaseBom = "33.1.0"
+firebaseBom = "34.15.0"
 billing = "7.0.0"
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -69,6 +69,9 @@ androidx-media3-transformer = { module = "androidx.media3:media3-transformer", v
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-ai = { module = "com.google.firebase:firebase-ai" }
+firebase-appcheck-debug = { module = "com.google.firebase:firebase-appcheck-debug" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

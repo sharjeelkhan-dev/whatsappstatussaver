@@ -9,12 +9,23 @@ import coil.ImageLoaderFactory
 import coil.decode.VideoFrameDecoder
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
+import com.google.firebase.Firebase
+import com.google.firebase.appcheck.appCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.initialize
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class WhatsAppStatusSaverApp : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
+        
+        // Initialize Firebase AI Logic App Check for local development
+        Firebase.initialize(context = this)
+        Firebase.appCheck.installAppCheckProviderFactory(
+            DebugAppCheckProviderFactory.getInstance(),
+        )
+
         createNotificationChannel()
     }
 
