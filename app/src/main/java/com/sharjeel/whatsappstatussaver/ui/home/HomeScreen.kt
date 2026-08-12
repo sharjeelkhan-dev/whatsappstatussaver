@@ -47,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -130,13 +129,13 @@ fun HomeScreen(
             HeaderSection(onNavigateToSettings)
 
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(top = 24.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
                 // Main Platform Selection
                 PlatformSection(onNavigateToStatus)
 
-                // Tools Section
+                // Horizontal Row Premium Tools
                 ToolsSection(
                     onDirectChat = onNavigateToDirectChat,
                     onSavedFiles = onNavigateToSavedFiles,
@@ -172,7 +171,7 @@ private fun HeaderSection(onSettingsClick: () -> Unit) {
             )
             Text(
                 "Keep your favorite stories forever",
-                modifier = Modifier.offset(x = 10.dp,y = 10.dp),
+                modifier = Modifier.offset(x = 10.dp, y = 10.dp),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f)
             )
@@ -184,17 +183,22 @@ private fun HeaderSection(onSettingsClick: () -> Unit) {
                 .padding(top = 15.dp)
                 .background(Color.White.copy(alpha = 0.2f), CircleShape)
         ) {
-            Icon(painter = painterResource(id = R.drawable.setting_icon),
+            Icon(
+                painter = painterResource(id = R.drawable.setting_icon),
                 contentDescription = "Settings",
                 modifier = Modifier.size(25.dp),
-                tint = Color.White)
+                tint = Color.White
+            )
         }
     }
 }
 
 @Composable
 private fun PlatformSection(onPlatformClick: (PlatformType) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         SectionTitle(title = "Choose Platform")
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -226,34 +230,87 @@ private fun ToolsSection(
     onSavedFiles: () -> Unit,
     onReminder: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier.padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         SectionTitle(title = "Premium Tools")
-        
-        ToolRow(
-            title = "Direct Chat",
-            description = "Message without saving number",
-            icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
-            iconContainerColor = Color(0xFFE8F5E9),
-            iconTint = PrimaryGreen,
-            onClick = onDirectChat
-        )
 
-        ToolRow(
-            title = "Saved Gallery",
-            description = "Manage your downloaded media",
-            icon = ImageVector.vectorResource(id = R.drawable.picture_icon),
-            iconContainerColor = Color(0xFFFFF3E0),
-            iconTint = Color(0xFFFF9800),
-            onClick = onSavedFiles
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            val tools = listOf(
+                Triple("DirectChat", R.drawable.navigate_icon, onDirectChat),
+                Triple("Gallery", R.drawable.picture_icon, onSavedFiles),
+                Triple("Reminder", R.drawable.alarm_clock_icon, onReminder),
+                Triple("Share", R.drawable.share_line_icon) {
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "Check out this WhatsApp Status Saver!")
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(sendIntent, null))
+                }
+            )
 
-        ToolRow(
-            title = "Daily Reminder",
-            description = "Get notified for status updates",
-            icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
-            iconContainerColor = Color(0xFFE3F2FD),
-            iconTint = Color(0xFF2196F3),
-            onClick = onReminder
+            tools.forEach { (title, iconRes, onClick) ->
+                ToolGridItem(
+                    title = title,
+                    icon = ImageVector.vectorResource(id = iconRes),
+                    modifier = Modifier.weight(1f),
+                    onClick = onClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ToolGridItem(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(20.dp),
+            color = Color.White,
+            shadowElevation = 6.dp,
+            modifier = Modifier.size(64.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFFF1F8E9), Color.White)
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = PrimaryGreen,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = DarkText,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -286,20 +343,26 @@ private fun PlatformCard(
                     modifier = Modifier.size(48.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(icon, contentDescription = null,
-                            tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(
+                            icon, contentDescription = null,
+                            tint = Color.White, modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Text(title, fontWeight = FontWeight.ExtraBold,
+                Text(
+                    title, fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
-                    color = Color.White)
+                    color = Color.White
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(subtitle, fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.7f))
+                    Text(
+                        subtitle, fontSize = 14.sp,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
                     Icon(
                         painter = painterResource(id = R.drawable.arrow_long_right_icon),
                         contentDescription = null,
@@ -308,61 +371,6 @@ private fun PlatformCard(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ToolRow(
-    title: String,
-    description: String,
-    icon: ImageVector,
-    iconContainerColor: Color,
-    iconTint: Color,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(24.dp),
-        color = Color.White,
-        shadowElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(iconContainerColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null,
-                    tint = iconTint, modifier = Modifier.size(26.dp))
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp, color = DarkText)
-                Text(
-                    description,
-                    fontSize = 13.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Icon(
-                painter = painterResource(id = R.drawable.arrow_long_right_icon),
-                contentDescription = null,
-                tint = Color.Gray.copy(alpha = 1f),
-                modifier = Modifier.size(20.dp)
-            )
         }
     }
 }
@@ -406,4 +414,3 @@ fun HomeScreenPreview() {
         HomeScreen({}, {}, {}, {}, {})
     }
 }
-
