@@ -5,6 +5,7 @@
 
 | Subsystem | Technical Execution Architecture |
 | :--- | :--- |
+| 🤖 **AI Smart Search & Recognition** | Natural language & semantic search ("show funny videos"), AI face & object detection, scene analysis, and multi-language OCR text extraction. |
 | 🔄 **Reactive State** | Fluid UI adjustments driven completely via async Kotlin Coroutines lifecycle pipelines. |
 | 💎 **Material Design** | Beautiful glassmorphic themes natively processed using declarative "Jetpack Compose" elements. |
 | ⏰ **Automated Triggers** | Custom scheduling features processing notifications safely via system clock integrations. |
