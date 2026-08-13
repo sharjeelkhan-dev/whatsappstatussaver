@@ -21,8 +21,6 @@ class AiRepository @Inject constructor(
     private val generativeModel: GenerativeModel
 ) {
     private val chatMutex = Mutex()
-
-    // Firebase AI Logic me Chat instance model se initialize hota hai
     private var chatSession: Chat = generativeModel.startChat()
 
     fun chat(prompt: String): Flow<String> = flow {
@@ -34,42 +32,67 @@ class AiRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("AiRepository", "Chat error: ${e.localizedMessage}", e)
             emit("Error: ${e.localizedMessage ?: "Unknown error occurred"}")
-
-            // Failure par chat session re-initialize karein
             chatMutex.withLock {
                 chatSession = generativeModel.startChat()
             }
         }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun analyzeImage(bitmap: Bitmap): String = withContext(Dispatchers.IO) {
+    suspend fun generateFromPrompt(prompt: String, bitmap: Bitmap? = null, mediaBytes: ByteArray? = null, mimeType: String? = null): String = withContext(Dispatchers.IO) {
         try {
-            // Multimodal content creation using Firebase AI content builder
-            val promptContent = content {
-                image(bitmap)
-                text(
-                    "Analyze this image for a WhatsApp status saver app. " +
-                            "Identify scenes, objects, people, colors, and activities. " +
-                            "Extract any visible text (OCR). " +
-                            "Suggest 3 engagement-focused captions and 5 trending hashtags. " +
-                            "Format clearly."
-                )
+            val response = if (bitmap != null) {
+                val inputContent = content {
+                    image(bitmap)
+                    text(prompt)
+                }
+                generativeModel.generateContent(inputContent)
+            } else if (mediaBytes != null && mimeType != null) {
+                val inputContent = content {
+                    inlineData(mediaBytes, mimeType)
+                    text(prompt)
+                }
+                generativeModel.generateContent(inputContent)
+            } else {
+                generativeModel.generateContent(prompt)
             }
-            val response = generativeModel.generateContent(promptContent)
-            response.text ?: "Could not analyze image"
+            response.text ?: "AI could not generate a response."
         } catch (e: Exception) {
-            Log.e("AiRepository", "AnalyzeImage error: ${e.localizedMessage}", e)
-            "Error: ${e.localizedMessage ?: "Unknown error occurred"}"
+            Log.e("AiRepository", "Generation error: ${e.localizedMessage}", e)
+            "Error: ${e.localizedMessage}"
         }
     }
 
+    // Specialized features
+    suspend fun analyzeStatus(bitmap: Bitmap): String = generateFromPrompt(
+        "Analyze this WhatsApp status. Identify scenes, objects, people, colors, and activities. " +
+                "Detect emotions (motivational, romantic, funny, sad, etc.). " +
+                "Provide a summary in 5 points.", bitmap
+    )
+
+    suspend fun extractOCR(bitmap: Bitmap): String = generateFromPrompt(
+        "Extract all visible text from this image (OCR). Return ONLY the extracted text.", bitmap
+    )
+
+    suspend fun generateCaptionsAndHashtags(bitmap: Bitmap): String = generateFromPrompt(
+        "Generate 3 creative WhatsApp captions and 5 trending hashtags for this image.", bitmap
+    )
+
+    suspend fun translateText(text: String, targetLanguage: String): String = generateFromPrompt(
+        "Translate the following text to $targetLanguage: \n\n$text"
+    )
+
+    suspend fun classifyMedia(bitmap: Bitmap): String = generateFromPrompt(
+        "AI Automatic Category Classification: Classify this status into exactly ONE category from: " +
+                "Funny, Islamic, Nature, Motivational, Sad, Romantic, Travel, Food. " +
+                "Also provide 3-5 smart tags. Format: Category: [Name], Tags: [tag1, tag2...]", bitmap
+    )
+
     suspend fun performSmartSearch(query: String, mediaList: List<StatusMedia>): List<String> = withContext(Dispatchers.IO) {
         if (mediaList.isEmpty() || query.isBlank()) return@withContext emptyList()
-
         try {
             val metadata = mediaList.joinToString("\n") { "${it.name} (Tags: ${it.tags})" }
             val promptText = """
-                Based on the following files and their tags, find files that match: "$query".
+                Based on the following files and their tags, find files that match the intent: "$query".
                 Files:
                 $metadata
                 
