@@ -14,15 +14,43 @@
 <summary><b>📱 View App Screenshots (Click to Expand)</b></summary>
 <br/>
 <table width="100%">
+  <!-- Row 1: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/03e56704-5682-4c62-8e16-f95b7e967d13" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/37c83ad6-fb43-4a11-89b7-a66b70b36839" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/64a6f25e-8d0e-4348-8191-63a4e279ff7a" width="100%" alt="Screen 3" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3fd4fbe3-2a12-4bf6-9e33-7529bf053518" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a7a06c8b-fa9a-48c0-a49e-23b0017e513d" width="100%" alt="Screen 2" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3e5f9e84-8d86-494a-bd9a-a683e141532f" width="100%" alt="Screen 3" /></td>
   </tr>
+  <!-- Row 1: Details -->
   <tr>
-    <td width="33.3%  align="center><img  src="https://github.com/user-attachments/assets/fbf5d492-431d-4754-809d-eff86f03309f" width="100%" alt="Screen 4" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/e4aa17fa-15c6-4da5-96ad-87acadbe04c9" width="100%" alt="Screen 5" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/68510d63-dca6-4d73-be08-24a1f088a6b5" width="100%" alt="Screen 6" /></td>
+    <td align="center"><b>Screen 1:</b> Home Screen</td>
+    <td align="center"><b>Screen 2:</b> AI Assistant Screen </td>
+    <td align="center"><b>Screen 3:</b> Direct Chat </td>
+  </tr>
+
+  <!-- Row 2: Images -->
+  <tr>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/817012a1-cd0a-4755-a405-6726ba49aff1" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/de52207b-5139-4ddb-a038-b6bfe230df12" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5e2b0579-6ef3-42b5-a544-8f6430eabbdf" width="100%" alt="Screen 6" /></td>
+  </tr>
+  <!-- Row 2: Details -->
+  <tr>
+    <td align="center"><b>Screen 4:</b> Status Video </td>
+    <td align="center"><b>Screen 5:</b> AI Status Magic </td>
+    <td align="center"><b>Screen 6:</b> Caption Generated </td>
+  </tr>
+
+  <!-- Row 3: Images -->
+  <tr>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5bf18169-2fea-487b-b639-521e2138784c" width="100%" alt="Screen 7" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/009425e0-4442-442d-b98a-7aa16ba70527" width="100%" alt="Screen 8" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a70c9988-3e86-4df1-94e3-af38a841c6cf" width="100%" alt="Screen 9" /></td>
+  </tr>
+  <!-- Row 3: Details -->
+  <tr>
+    <td align="center"><b>Screen 7:</b> Saved Files </td>
+    <td align="center"><b>Screen 8:</b> Reminder Screen </td>
+    <td align="center"><b>Screen 9:</b> Settings Screen </td>
   </tr>
 </table>
 </details>
