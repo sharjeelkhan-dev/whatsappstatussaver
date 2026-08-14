@@ -38,7 +38,7 @@
   <tr>
     <td align="center"><b>Screen 4:</b> Status Video </td>
     <td align="center"><b>Screen 5:</b> AI Status Magic </td>
-    <td align="center"><b>Screen 6:</b> Caption Generated </td>
+    <td align="center"><b>Screen 6:</b> Captions Generated </td>
   </tr>
 
   <!-- Row 3: Images -->
