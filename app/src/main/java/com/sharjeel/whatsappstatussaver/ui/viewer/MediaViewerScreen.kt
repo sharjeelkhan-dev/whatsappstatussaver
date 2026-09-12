@@ -40,7 +40,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -156,13 +159,13 @@ fun MediaViewerScreen(
             else -> Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     val isInspectionMode = LocalInspectionMode.current
     val exoPlayer = remember(statusMedia.uri) {
         if (statusMedia.type == MediaType.VIDEO && !isInspectionMode) {
             ExoPlayer.Builder(context).build().apply {
                 val mimeType = if (statusMedia.uri.scheme == "content") context.contentResolver.getType(statusMedia.uri) ?: "video/mp4"
-                               else "video/mp4"
+                else "video/mp4"
                 setMediaItem(MediaItem.Builder().setUri(statusMedia.uri).setMimeType(mimeType).build())
                 prepare()
                 playWhenReady = true
@@ -304,7 +307,7 @@ fun MediaViewerScreen(
                                 setBackgroundColor(android.graphics.Color.BLACK)
                             }
                         }, modifier = Modifier.fillMaxSize())
-                        
+
                         AnimatedVisibility(
                             visible = isControlsVisible,
                             enter = fadeIn(),
@@ -355,7 +358,7 @@ fun MediaViewerScreen(
                                     val isPressed by sliderInteractionSource.collectIsPressedAsState()
                                     val isDragged by sliderInteractionSource.collectIsDraggedAsState()
                                     val isInteracting = isPressed || isDragged
-                                    
+
                                     val thumbSize by animateDpAsState(
                                         targetValue = if (isInteracting) 20.dp else 14.dp,
                                         label = "thumbSize"
@@ -363,7 +366,7 @@ fun MediaViewerScreen(
 
                                     Slider(
                                         value = if (duration > 0) playbackPosition.toFloat() / duration.toFloat() else 0f,
-                                        onValueChange = { 
+                                        onValueChange = {
                                             val seekPos = (it * duration).toLong()
                                             exoPlayer?.seekTo(seekPos)
                                             playbackPosition = seekPos
@@ -389,7 +392,7 @@ fun MediaViewerScreen(
                                         },
                                         modifier = Modifier.fillMaxWidth()
                                     )
-                                    
+
                                     Row(
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -401,7 +404,7 @@ fun MediaViewerScreen(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
                                         )
-                                        
+
                                         IconButton(onClick = { /* Settings Action */ }) {
                                             Icon(
                                                 Icons.Default.Settings,
@@ -481,84 +484,261 @@ private fun MagicContent(uiState: MagicUiState, onAction: (MagicType) -> Unit, o
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("AI Status Magic", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = DarkText)
-        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "AI Status Magic",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = DarkText
+        )
+        Spacer(modifier = Modifier.height(20.dp))
 
         when (uiState) {
             is MagicUiState.Idle -> {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MagicButton(icon = Icons.Default.Psychology, label = "AI Analysis", Modifier.weight(1f)) { onAction(MagicType.ANALYSIS) }
-                        MagicButton(icon = Icons.Default.TextFields, label = "Text OCR", Modifier.weight(1f)) { onAction(MagicType.OCR) }
+                        MagicButton(
+                            icon = Icons.Default.Psychology,
+                            label = "AI Analysis",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.ANALYSIS) }
+
+                        MagicButton(
+                            icon = Icons.Default.TextFields,
+                            label = "Text OCR",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.OCR) }
                     }
+
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MagicButton(icon = ImageVector.vectorResource(id = R.drawable.closed_captions_video_clip_black_icon), label = "Captions", Modifier.weight(1f)) { onAction(MagicType.CAPTION) }
-                        MagicButton(icon = ImageVector.vectorResource(id = R.drawable.feather_icon), label = "Shayari", Modifier.weight(1f)) { onAction(MagicType.SHAYARI) }
+                        MagicButton(
+                            icon = ImageVector.vectorResource(id = R.drawable.closed_captions_video_clip_black_icon),
+                            label = "Captions",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.CAPTION) }
+
+                        MagicButton(
+                            icon = ImageVector.vectorResource(id = R.drawable.feather_icon),
+                            label = "Shayari",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.SHAYARI) }
                     }
+
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MagicButton(icon = ImageVector.vectorResource(id = R.drawable.object_selected_icon), label = "Objects", Modifier.weight(1f)) { onAction(MagicType.OBJECT_DETECTION) }
-                        MagicButton(icon = ImageVector.vectorResource(id = R.drawable.language_translate_speech_bubbles_black_icon), label = "Translate", Modifier.weight(1f)) { onAction(MagicType.TRANSLATE_URDU) }
+                        MagicButton(
+                            icon = ImageVector.vectorResource(id = R.drawable.object_selected_icon),
+                            label = "Objects",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.OBJECT_DETECTION) }
+
+                        MagicButton(
+                            icon = ImageVector.vectorResource(id = R.drawable.language_translate_speech_bubbles_black_icon),
+                            label = "Translate",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.TRANSLATE_URDU) }
                     }
+
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        MagicButton(icon = ImageVector.vectorResource(id = R.drawable.emoji_tongue_black_icon), label = "Mood", Modifier.weight(1f)) { onAction(MagicType.MOOD) }
-                        MagicButton(icon = Icons.Default.AutoAwesome, label = "Magic Picks", Modifier.weight(1f)) { onAction(MagicType.RECOMMENDATION) }
+                        MagicButton(
+                            icon = ImageVector.vectorResource(id = R.drawable.emoji_tongue_black_icon),
+                            label = "Mood",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.MOOD) }
+
+                        MagicButton(
+                            icon = Icons.Default.AutoAwesome,
+                            label = "Magic Picks",
+                            iconColor = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.weight(1f)
+                        ) { onAction(MagicType.RECOMMENDATION) }
                     }
                 }
             }
             is MagicUiState.Loading -> {
-                CircularProgressIndicator(color = PrimaryGreen)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(uiState.message, color = Color.Gray)
+                Column(
+                    modifier = Modifier.padding(vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = PrimaryGreen, strokeWidth = 2.5.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(uiState.message, color = Color.Gray, fontSize = 14.sp)
+                }
             }
             is MagicUiState.Success -> {
-                Box(modifier = Modifier.fillMaxWidth().background(Color(0xFFF1F8E9), RoundedCornerShape(16.dp)).padding(16.dp)) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(uiState.type.name, fontWeight = FontWeight.Bold, color = PrimaryGreen, modifier = Modifier.weight(1f))
-                            IconButton(onClick = { 
-                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                val clip = android.content.ClipData.newPlainText("AI Result", uiState.result)
-                                clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-                            }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = PrimaryGreen, modifier = Modifier.size(20.dp))
-                            }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = uiState.type.name.replace("_", " "),
+                            fontWeight = FontWeight.Bold,
+                            color = SecondaryGreen,
+                            fontSize = 14.sp
+                        )
+
+                        IconButton(onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clip = android.content.ClipData.newPlainText("AI Result", uiState.result)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = "Copy",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(uiState.result, color = DarkText)
                     }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-                TextButton(onClick = onReset) {
-                    Text("Try Another Magic", color = PrimaryGreen, fontWeight = FontWeight.Bold)
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = parseMagicMarkdown(uiState.result),
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = DarkText,
+                            fontSize = 15.sp,
+                            lineHeight = 25.sp
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    TextButton(
+                        onClick = onReset,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Try Another Magic", color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
             is MagicUiState.Error -> {
-                Text("Error: ${uiState.message}", color = Color.Red)
-                Spacer(modifier = Modifier.height(12.dp))
-                TextButton(onClick = onReset) { Text("Retry", color = PrimaryGreen) }
+                Column(
+                    modifier = Modifier.padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Error: ${uiState.message}", color = Color(0xFFE53935), fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(onClick = onReset) {
+                        Text("Retry", color = PrimaryGreen, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
-private fun MagicButton(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun MagicButton(
+    icon: ImageVector,
+    label: String,
+    iconColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(80.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFFF7F8F9),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
+        modifier = modifier.height(72.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFF8FAFB),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB))
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(24.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(22.dp)
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = DarkText)
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = DarkText
+            )
+        }
+    }
+}
+
+private fun parseMagicMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
+    val lines = text.lines()
+    return buildAnnotatedString {
+        lines.forEachIndexed { index, rawLine ->
+            var line = rawLine.trim()
+
+            val isHeader = line.startsWith("###") || line.startsWith("##") || line.startsWith("#")
+            if (isHeader) {
+                line = line.replace("#", "").trim()
+            }
+
+            val isBullet = line.startsWith("*") || line.startsWith("-")
+            if (isBullet) {
+                line = "•  " + line.drop(1).trim()
+            }
+
+            if (isHeader) {
+                withStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = SecondaryGreen
+                    )
+                ) {
+                    append(line)
+                }
+            } else {
+                val parts = line.split("**")
+                parts.forEachIndexed { i, part ->
+                    if (i % 2 == 1) {
+                        withStyle(
+                            style = SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                color = DarkText
+                            )
+                        ) {
+                            append(part)
+                        }
+                    } else {
+                        withStyle(
+                            style = SpanStyle(color = Color(0xFF374151))
+                        ) {
+                            append(part)
+                        }
+                    }
+                }
+            }
+
+            if (index < lines.size - 1) {
+                append("\n")
+            }
         }
     }
 }
