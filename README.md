@@ -30,9 +30,9 @@
 
   <!-- Row 2: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/817012a1-cd0a-4755-a405-6726ba49aff1" width="100%" alt="Screen 4" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/de52207b-5139-4ddb-a038-b6bfe230df12" width="100%" alt="Screen 5" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5e2b0579-6ef3-42b5-a544-8f6430eabbdf" width="100%" alt="Screen 6" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/dbc6ba7a-f696-4a78-abc4-dd1b8033f1f7" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/279212b1-496e-4f0b-9c7f-b66d72562428" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a8edf568-2ee4-433b-9ed6-a188f5fcaf99" width="100%" alt="Screen 6" /></td>
   </tr>
   <!-- Row 2: Details -->
   <tr>
