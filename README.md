@@ -7,7 +7,7 @@
 | :--- | :--- |
 | 🤖 **AI Smart Search & Recognition** | Natural language & semantic search ("show funny videos"), AI face & object detection, scene analysis, and multi-language OCR text extraction. |
 | 🔄 **Reactive State** | Fluid UI adjustments driven completely via async Kotlin Coroutines lifecycle pipelines. |
-| 💎 **Material Design** | Beautiful glassmorphic themes natively processed using declarative "Jetpack Compose" elements. |
+| 💎 **Material Design** | Native AI-powered status management with clean, adaptive Jetpack Compose UI. |
 | ⏰ **Automated Triggers** | Custom scheduling features processing notifications safely via system clock integrations. |
 | 🎨 **Asset Attribution** | Media action elements and download utility vectors optimized from [Uxwing](https://uxwing.com/). |
 
