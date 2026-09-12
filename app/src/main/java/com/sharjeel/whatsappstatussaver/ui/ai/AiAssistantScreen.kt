@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -50,8 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,7 +62,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1C2D2A)
+private val DarkText = Color(0xFF1F2937)
+private val LightText = Color(0xFF374151)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,14 +85,13 @@ fun AiAssistantScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            // Header Section - EXACT COPY of StatusScreen and SavedFilesScreen structure
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .height(100.dp)
                     .background(
                         brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
-                        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
                     )
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
@@ -125,46 +128,32 @@ fun AiAssistantScreen(
                 }
             }
         },
-        containerColor = Color(0xFFFBFDFF),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0) // EDGE-TO-EDGE
+        containerColor = Color.White,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = paddingValues.calculateTopPadding())
-                .imePadding() // Ensures layout resizes without moving top bar
+                .imePadding()
         ) {
-            // Chat area
             Box(modifier = Modifier.weight(1f)) {
                 if (uiState.messages.isEmpty() && !uiState.isLoading) {
-                    AiEmptyState(
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    AiEmptyState(modifier = Modifier.fillMaxSize())
                 } else {
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         items(uiState.messages) { message ->
-                            ChatBubble(message = message)
+                            GeminiStyleMessageItem(message = message)
                         }
 
                         if (uiState.isLoading) {
                             item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = PrimaryGreen,
-                                        strokeWidth = 2.dp
-                                    )
-                                }
+                                GeminiLoadingState()
                             }
                         }
                     }
@@ -174,29 +163,29 @@ fun AiAssistantScreen(
             // Input Section
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 8.dp,
+                shadowElevation = 4.dp,
                 color = Color.White
             ) {
                 Row(
                     modifier = Modifier
                         .navigationBarsPadding()
-                        .padding(12.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     OutlinedTextField(
                         value = inputText,
                         onValueChange = { inputText = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Ask anything about statuses...", color = Color.Gray) },
+                        placeholder = { Text("Ask anything...", color = Color.Gray) },
                         shape = RoundedCornerShape(28.dp),
                         maxLines = 4,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PrimaryGreen,
-                            unfocusedBorderColor = Color.LightGray,
-                            focusedContainerColor = Color(0xFFF0F2F5),
-                            unfocusedContainerColor = Color(0xFFF0F2F5),
+                            unfocusedBorderColor = Color(0xFFE5E7EB),
+                            focusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedContainerColor = Color(0xFFF9FAFB),
                             cursorColor = PrimaryGreen
                         )
                     )
@@ -212,11 +201,12 @@ fun AiAssistantScreen(
                         containerColor = PrimaryGreen,
                         contentColor = Color.White,
                         elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp),
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Send"
+                            contentDescription = "Send",
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -226,35 +216,103 @@ fun AiAssistantScreen(
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
-    val isUser = message.isUser
-    val alignment = if (isUser) Alignment.End else Alignment.Start
-    val containerColor = if (isUser) SoftGreen else Color.White
-    val contentColor = DarkText
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = alignment
-    ) {
-        Surface(
-            color = containerColor,
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = if (isUser) 16.dp else 4.dp,
-                bottomEnd = if (isUser) 4.dp else 16.dp
-            ),
-            shadowElevation = 1.dp,
-            modifier = Modifier.widthIn(max = 280.dp)
+private fun GeminiStyleMessageItem(message: ChatMessage) {
+    if (message.isUser) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.End
         ) {
-            Text(
-                text = message.text,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    lineHeight = 22.sp,
-                    color = contentColor
+            Surface(
+                color = SoftGreen,
+                shape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+            ) {
+                Text(
+                    text = message.text,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = DarkText,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 )
+            }
+        }
+    } else {
+        // Direct Full-Width Raw Markdown Output (No Top Sparkle Badge/Header)
+        Text(
+            text = parseGeminiMarkdown(message.text),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = DarkText,
+                fontSize = 15.sp,
+                lineHeight = 25.sp
             )
+        )
+    }
+}
+
+@Composable
+private fun GeminiLoadingState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(20.dp),
+            color = PrimaryGreen,
+            strokeWidth = 2.dp
+        )
+    }
+}
+
+private fun parseGeminiMarkdown(text: String): AnnotatedString {
+    val lines = text.lines()
+    return buildAnnotatedString {
+        lines.forEachIndexed { index, rawLine ->
+            var line = rawLine.trim()
+
+            val isHeader = line.startsWith("###") || line.startsWith("##") || line.startsWith("#")
+            if (isHeader) {
+                line = line.replace("#", "").trim()
+            }
+
+            val isBullet = line.startsWith("*") || line.startsWith("-")
+            if (isBullet) {
+                line = "•  " + line.drop(1).trim()
+            }
+
+            if (isHeader) {
+                withStyle(
+                    style = SpanStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = SecondaryGreen
+                    )
+                ) {
+                    append(line)
+                }
+            } else {
+                val parts = line.split("**")
+                parts.forEachIndexed { i, part ->
+                    if (i % 2 == 1) {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = DarkText)) {
+                            append(part)
+                        }
+                    } else {
+                        withStyle(style = SpanStyle(color = LightText)) {
+                            append(part)
+                        }
+                    }
+                }
+            }
+
+            if (index < lines.size - 1) {
+                append("\n")
+            }
         }
     }
 }
@@ -270,14 +328,14 @@ private fun AiEmptyState(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(72.dp)
                 .background(SoftGreen, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.AutoAwesome,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(36.dp),
                 tint = PrimaryGreen
             )
         }
@@ -289,7 +347,7 @@ private fun AiEmptyState(modifier: Modifier = Modifier) {
             color = DarkText,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Ask me anything about your statuses!",
             textAlign = TextAlign.Center,
