@@ -141,7 +141,7 @@ fun ProfilePhotosScreen(
 
             try {
                 launcher.launch(initialHintUri)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Fallback 1: Media directory
                 try {
                     val mediaFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
@@ -150,7 +150,7 @@ fun ProfilePhotosScreen(
                         "primary:Android/media/com.whatsapp/WhatsApp/Media"
                     }
                     launcher.launch(DocumentsContract.buildDocumentUri(authority, mediaFallbackId))
-                } catch (e2: Exception) {
+                } catch (_: Exception) {
                     // Fallback 2: Package root
                     try {
                         val pkgFallbackId = if (selectedPlatform == PlatformType.WHATSAPP_BUSINESS) {
@@ -159,7 +159,7 @@ fun ProfilePhotosScreen(
                             "primary:Android/media/com.whatsapp"
                         }
                         launcher.launch(DocumentsContract.buildDocumentUri(authority, pkgFallbackId))
-                    } catch (e3: Exception) {
+                    } catch (_: Exception) {
                         launcher.launch(null) // System default
                     }
                 }
@@ -495,4 +495,3 @@ fun EmptyStatePreview() {
         )
     }
 }
-
