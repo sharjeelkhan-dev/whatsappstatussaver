@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +37,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import com.sharjeel.whatsappstatussaver.R
+import com.sharjeel.whatsappstatussaver.data.models.PlatformType
 import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val PrimaryGreen = Color(0xFF00A884)
@@ -197,6 +200,67 @@ fun DirectChatScreen(
     var selectedCountry by remember { mutableStateOf(allCountries.find { it.name == "Pakistan" } ?: allCountries[0]) }
     var showCountryPicker by remember { mutableStateOf(false) }
 
+    var showPlatformDialog by remember { mutableStateOf(false) }
+    var pendingChatAction by remember { mutableStateOf<((PlatformType) -> Unit)?>(null) }
+
+    fun openChat(platform: PlatformType) {
+        val formattedNumber = selectedCountry.code.replace("+", "") + phoneNumber
+        val url = "https://api.whatsapp.com/send?phone=$formattedNumber&text=${Uri.encode(message)}"
+        val packageName = if (platform == PlatformType.WHATSAPP) "com.whatsapp" else "com.whatsapp.w4b"
+        
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = url.toUri()
+            setPackage(packageName)
+        }
+        
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun checkAndChat(action: (PlatformType) -> Unit) {
+        val isWhatsappInstalled = try { context.packageManager.getPackageInfo("com.whatsapp", 0); true } catch (_: Exception) { false }
+        val isBusinessInstalled = try { context.packageManager.getPackageInfo("com.whatsapp.w4b", 0); true } catch (_: Exception) { false }
+
+        when {
+            isWhatsappInstalled && isBusinessInstalled -> {
+                pendingChatAction = action
+                showPlatformDialog = true
+            }
+            isWhatsappInstalled -> action(PlatformType.WHATSAPP)
+            isBusinessInstalled -> action(PlatformType.WHATSAPP_BUSINESS)
+            else -> Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    if (showPlatformDialog) {
+        AlertDialog(
+            onDismissRequest = { showPlatformDialog = false },
+            title = { Text("Open with") },
+            text = { Text("Select your WhatsApp version") },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingChatAction?.invoke(PlatformType.WHATSAPP)
+                    showPlatformDialog = false
+                }) {
+                    Text("WhatsApp", color = PrimaryGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    pendingChatAction?.invoke(PlatformType.WHATSAPP_BUSINESS)
+                    showPlatformDialog = false
+                }) {
+                    Text("Business", color = PrimaryGreen)
+                }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = Color.White
+        )
+    }
+
     if (showCountryPicker) {
         CountryPickerDialog(
             onDismiss = { showCountryPicker = false },
@@ -294,18 +358,7 @@ fun DirectChatScreen(
                         Toast.makeText(context, "Please enter a phone number", Toast.LENGTH_SHORT).show()
                         return@Button
                     }
-                    val formattedNumber = selectedCountry.code.replace("+", "") + phoneNumber
-                    val url = "https://api.whatsapp.com/send?phone=$formattedNumber&text=${Uri.encode(message)}"
-                    
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = url.toUri()
-                    }
-                    
-                    try {
-                        context.startActivity(Intent.createChooser(intent, "Open with"))
-                    } catch (_: Exception) {
-                        Toast.makeText(context, "WhatsApp is not installed", Toast.LENGTH_SHORT).show()
-                    }
+                    checkAndChat { platform -> openChat(platform) }
                 },
                 modifier = Modifier.fillMaxWidth().height(60.dp),
                 shape = RoundedCornerShape(20.dp),
