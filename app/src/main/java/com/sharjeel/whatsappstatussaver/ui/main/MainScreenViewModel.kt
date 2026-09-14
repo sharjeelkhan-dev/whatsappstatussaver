@@ -25,4 +25,3 @@ sealed interface MainScreenUiState {
 
   data class Success(val data: List<String>) : MainScreenUiState
 }
-

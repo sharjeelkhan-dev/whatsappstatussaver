@@ -53,4 +53,3 @@ fun MainScreenPreview() {
 fun MainScreenPortraitPreview() {
   WhatsAppStatusSaverTheme { MainScreen(listOf("Android")) }
 }
-
