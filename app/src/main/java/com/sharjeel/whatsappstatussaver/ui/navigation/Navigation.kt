@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import com.sharjeel.whatsappstatussaver.data.models.MediaType
 import com.sharjeel.whatsappstatussaver.data.models.PlatformType
 import com.sharjeel.whatsappstatussaver.data.models.StatusMedia
+import androidx.core.net.toUri
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -75,7 +76,7 @@ fun WhatsAppStatusSaverNavHost(
             arguments = listOf(navArgument("platform") { type = NavType.StringType })
         ) { backStackEntry ->
             val platformString = backStackEntry.arguments?.getString("platform") ?: PlatformType.WHATSAPP.name
-            val platform = try { PlatformType.valueOf(platformString) } catch (e: Exception) { PlatformType.WHATSAPP }
+            val platform = try { PlatformType.valueOf(platformString) } catch (_: Exception) { PlatformType.WHATSAPP }
             com.sharjeel.whatsappstatussaver.ui.status.StatusScreen(
                 initialPlatform = platform,
                 onNavigateBack = { navController.popBackStack() },
@@ -121,17 +122,17 @@ fun WhatsAppStatusSaverNavHost(
             val decodedUriStr = try {
                 val decodedBytes = Base64.decode(base64Uri, Base64.URL_SAFE or Base64.NO_WRAP)
                 String(decodedBytes, Charsets.UTF_8)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 base64Uri // Fallback incase parsing fails
             }
 
             val statusMedia = StatusMedia(
-                uri = Uri.parse(decodedUriStr),
+                uri = decodedUriStr.toUri(),
                 name = name,
-                type = try { MediaType.valueOf(typeStr) } catch (e: Exception) { MediaType.IMAGE },
+                type = try { MediaType.valueOf(typeStr) } catch (_: Exception) { MediaType.IMAGE },
                 size = 0L,
                 dateModified = 0L,
-                platform = try { PlatformType.valueOf(platformStr) } catch (e: Exception) { PlatformType.WHATSAPP }
+                platform = try { PlatformType.valueOf(platformStr) } catch (_: Exception) { PlatformType.WHATSAPP }
             )
 
             val viewerViewModel: com.sharjeel.whatsappstatussaver.ui.saved.SavedFilesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
