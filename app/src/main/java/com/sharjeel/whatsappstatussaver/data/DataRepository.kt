@@ -10,4 +10,3 @@ interface DataRepository {
 class DefaultDataRepository : DataRepository {
   override val data: Flow<List<String>> = flow { emit(listOf("Android")) }
 }
-
