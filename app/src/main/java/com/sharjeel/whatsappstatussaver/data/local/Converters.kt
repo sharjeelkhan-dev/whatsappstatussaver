@@ -17,4 +17,3 @@ class Converters {
     @TypeConverter
     fun toPlatformType(value: String): PlatformType = enumValueOf(value)
 }
-
