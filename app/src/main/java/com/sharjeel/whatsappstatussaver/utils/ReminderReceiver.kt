@@ -76,4 +76,3 @@ class ReminderReceiver : BroadcastReceiver() {
         notificationManager.notify(id, notification)
     }
 }
-

@@ -16,4 +16,3 @@ data class ReminderEntity(
     val isAlertEnabled: Boolean,
     val isCompleted: Boolean = false
 )
-
