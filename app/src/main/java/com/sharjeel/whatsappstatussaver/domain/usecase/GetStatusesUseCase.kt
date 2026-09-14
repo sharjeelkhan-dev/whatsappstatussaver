@@ -12,4 +12,3 @@ class GetStatusesUseCase @Inject constructor(
         return repository.getStatuses(platform).first
     }
 }
-
