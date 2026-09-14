@@ -37,4 +37,3 @@ class ReminderViewModel @Inject constructor(
         }
     }
 }
-
