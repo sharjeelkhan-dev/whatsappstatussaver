@@ -18,4 +18,3 @@ interface ReminderDao {
     @Query("UPDATE reminders SET isCompleted = :isCompleted WHERE id = :id")
     suspend fun updateCompletionStatus(id: Int, isCompleted: Boolean)
 }
-
