@@ -476,4 +476,3 @@ fun DirectChatScreenPreview() {
         DirectChatScreen(onNavigateBack = {})
     }
 }
-

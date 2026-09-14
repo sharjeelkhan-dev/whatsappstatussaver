@@ -66,4 +66,3 @@ class DownloadNotifier @Inject constructor(
         }
     }
 }
-
