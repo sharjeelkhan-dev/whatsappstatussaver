@@ -48,4 +48,3 @@ object AppModule {
         return StorageRepository(context, savedMediaDao, appSettings)
     }
 }
-
