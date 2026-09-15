@@ -60,4 +60,3 @@ class SettingsViewModel @Inject constructor(
         billingManager.toggleMockPremium()
     }
 }
-
