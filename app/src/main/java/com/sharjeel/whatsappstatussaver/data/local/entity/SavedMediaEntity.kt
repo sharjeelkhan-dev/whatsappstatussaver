@@ -19,4 +19,3 @@ data class SavedMediaEntity(
     val isProfilePhoto: Boolean = false,
     val tags: String = "" // Comma-separated list of tags/contacts
 )
-
