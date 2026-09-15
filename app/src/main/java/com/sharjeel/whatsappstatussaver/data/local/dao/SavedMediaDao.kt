@@ -30,4 +30,3 @@ interface SavedMediaDao {
     @Query("SELECT * FROM saved_media WHERE name LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%' ORDER BY dateSaved DESC")
     fun searchMedia(query: String): Flow<List<SavedMediaEntity>>
 }
-
