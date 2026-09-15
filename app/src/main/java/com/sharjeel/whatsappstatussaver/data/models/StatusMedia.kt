@@ -6,13 +6,11 @@ enum class MediaType {
     IMAGE,
     VIDEO
 }
-
 enum class PlatformType {
     WHATSAPP,
     WHATSAPP_BUSINESS,
     SAVED
 }
-
 data class StatusMedia(
     val uri: Uri,
     val name: String,
@@ -24,4 +22,3 @@ data class StatusMedia(
     val isProfilePhoto: Boolean = false,
     val tags: String = ""
 )
-
