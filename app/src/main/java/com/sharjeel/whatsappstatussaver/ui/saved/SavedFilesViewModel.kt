@@ -122,4 +122,3 @@ class SavedFilesViewModel @Inject constructor(
         return compressVideoUseCase(uri)
     }
 }
-
