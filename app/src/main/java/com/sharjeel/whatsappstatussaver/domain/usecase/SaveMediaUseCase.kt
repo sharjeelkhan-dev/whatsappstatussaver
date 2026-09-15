@@ -11,4 +11,3 @@ class SaveMediaUseCase @Inject constructor(
         return repository.saveStatus(statusMedia)
     }
 }
-
