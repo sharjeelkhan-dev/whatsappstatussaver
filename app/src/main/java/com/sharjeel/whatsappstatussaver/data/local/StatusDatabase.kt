@@ -14,4 +14,3 @@ abstract class StatusDatabase : RoomDatabase() {
     abstract fun savedMediaDao(): SavedMediaDao
     abstract fun reminderDao(): ReminderDao
 }
-
