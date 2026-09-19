@@ -24,6 +24,7 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.net.toUri
 
 @Singleton
 class StorageRepository @Inject constructor(
@@ -37,7 +38,7 @@ class StorageRepository @Inject constructor(
         return try {
             context.packageManager.getPackageInfo(packageName, 0)
             true
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -133,7 +134,7 @@ class StorageRepository @Inject constructor(
             }
         }
 
-        if (folderFound || statuses.isNotEmpty()) {
+        if (folderFound) {
             debugMsg = "Success: Loaded items for ${platform.name}."
         }
 
@@ -368,7 +369,7 @@ class StorageRepository @Inject constructor(
                 }
             }
             if (current != null && current.isDirectory) {
-                folders.add(current!!)
+                folders.add(current)
             }
         }
 
@@ -412,12 +413,12 @@ class StorageRepository @Inject constructor(
             val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
             MediaScannerConnection.scanFile(context, arrayOf(Uri.decode(savedUri.toString())), arrayOf(mimeType), null)
             true
-        } catch (e: Exception) { false }
+        } catch (_: Exception) { false }
     }
 
     private fun saveToCustomLocation(statusMedia: StatusMedia, customUriStr: String): Uri? {
         return try {
-            val parentFolder = DocumentFile.fromTreeUri(context, Uri.parse(customUriStr)) ?: return null
+            val parentFolder = DocumentFile.fromTreeUri(context, customUriStr.toUri()) ?: return null
             val existingFile = parentFolder.findFile(statusMedia.name)
             if (existingFile != null) return existingFile.uri
             val mimeType = if (statusMedia.type == MediaType.VIDEO) "video/mp4" else "image/jpeg"
@@ -429,9 +430,9 @@ class StorageRepository @Inject constructor(
             try {
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(newFile.uri, takeFlags)
-            } catch (e: Exception) {}
+            } catch (_: Exception) {}
             newFile.uri
-        } catch (e: Exception) { null }
+        } catch (_: Exception) { null }
     }
 
     private fun saveToDefaultLocation(statusMedia: StatusMedia): Uri? {
@@ -456,7 +457,7 @@ class StorageRepository @Inject constructor(
                 context.contentResolver.update(savedUri, contentValues, null, null)
             }
             return savedUri
-        } catch (e: Exception) { return null }
+        } catch (_: Exception) { return null }
     }
 
     suspend fun deleteSavedFile(statusMedia: StatusMedia): Boolean = withContext(Dispatchers.IO) {
