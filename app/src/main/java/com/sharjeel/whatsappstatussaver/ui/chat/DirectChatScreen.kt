@@ -64,7 +64,6 @@ import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1C2D2A)
 
 data class Country(val name: String, val code: String, val flag: String, val abbrev: String)
 
@@ -238,8 +237,8 @@ fun DirectChatScreen(
     if (showPlatformDialog) {
         AlertDialog(
             onDismissRequest = { showPlatformDialog = false },
-            title = { Text("Open with") },
-            text = { Text("Select your WhatsApp version") },
+            title = { Text("Open with", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Select your WhatsApp version", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 TextButton(onClick = {
                     pendingChatAction?.invoke(PlatformType.WHATSAPP)
@@ -257,7 +256,7 @@ fun DirectChatScreen(
                 }
             },
             shape = RoundedCornerShape(24.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -275,7 +274,7 @@ fun DirectChatScreen(
         topBar = {
             DirectChatTopBar(onBack = onNavigateBack)
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -287,7 +286,7 @@ fun DirectChatScreen(
             Text(
                 "Start a chat without saving a contact",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             // Country Picker
@@ -295,7 +294,7 @@ fun DirectChatScreen(
                 onClick = { showCountryPicker = true },
                 modifier = Modifier.fillMaxWidth().height(64.dp),
                 shape = RoundedCornerShape(20.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 4.dp
             ) {
                 Row(
@@ -307,7 +306,7 @@ fun DirectChatScreen(
                          Text(selectedCountry.flag, fontSize = 28.sp)
                          Spacer(modifier = Modifier.width(16.dp))
                          Text("${selectedCountry.name} (${selectedCountry.code})",
-                             color = DarkText, fontWeight = FontWeight.Bold,
+                             color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold,
                              fontSize = 16.sp)
                     }
                     Icon( painter = painterResource(id = R.drawable.angle_circle_arrow_down_icon),
@@ -321,15 +320,17 @@ fun DirectChatScreen(
             OutlinedTextField(
                 value = phoneNumber,
                 onValueChange = { if (it.all { char -> char.isDigit() }) phoneNumber = it },
-                placeholder = { Text("Phone Number", color = Color.LightGray) },
+                placeholder = { Text("Phone Number", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.LightGray,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     focusedBorderColor = PrimaryGreen,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 prefix = { Text("${selectedCountry.code} ", color = PrimaryGreen, fontWeight = FontWeight.Bold) }
             )
@@ -338,14 +339,16 @@ fun DirectChatScreen(
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
-                placeholder = { Text("Write your message here (optional)...", color = Color.LightGray) },
+                placeholder = { Text("Write your message here (optional)...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 modifier = Modifier.fillMaxWidth().height(180.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.LightGray,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     focusedBorderColor = PrimaryGreen,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -421,23 +424,25 @@ fun CountryPickerDialog(
         Surface(
             modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f),
             shape = RoundedCornerShape(28.dp),
-            color = Color.White
+            color = MaterialTheme.colorScheme.surface
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                Text("Select Country", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = DarkText)
+                Text("Select Country", fontWeight = FontWeight.ExtraBold, fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search country...") },
+                    placeholder = { Text("Search country...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryGreen) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryGreen,
-                        unfocusedBorderColor = Color.LightGray
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 
@@ -448,7 +453,7 @@ fun CountryPickerDialog(
                         Surface(
                             onClick = { onSelect(country) },
                             shape = RoundedCornerShape(16.dp),
-                            color = SoftGreen.copy(alpha = 0.3f)
+                            color = PrimaryGreen.copy(alpha = 0.12f)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -458,7 +463,7 @@ fun CountryPickerDialog(
                             ) {
                                 Text(country.flag, fontSize = 28.sp)
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text(country.name, modifier = Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text(country.name, modifier = Modifier.weight(1f), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                 Text(country.code, fontWeight = FontWeight.ExtraBold, color = PrimaryGreen)
                             }
                         }
