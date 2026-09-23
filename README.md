@@ -5,11 +5,11 @@
 
 | Subsystem | Technical Execution Architecture |
 | :--- | :--- |
-| 🤖 **AI Smart Search & Recognition** | Natural language & semantic search ("show funny videos"), AI face & object detection, scene analysis, and multi-language OCR text extraction. |
-| 🔄 **Reactive State** | Fluid UI adjustments driven completely via async Kotlin Coroutines lifecycle pipelines. |
-| 💎 **Material Design** | Native AI-powered status management with clean, adaptive Jetpack Compose UI. |
-| ⏰ **Automated Triggers** | Custom scheduling features processing notifications safely via system clock integrations. |
-| 🎨 **Asset Attribution** | Media action elements and download utility vectors optimized from [Uxwing](https://uxwing.com/). |
+| 🤖 **AI Smart Search & Recognition** | Integrated AI Status Magic suite featuring AI Assistant for custom prompt responses (e.g., Islamic status recommendations), deep video AI Analysis (scene-by-scene visual breakdowns and mood descriptions), Text OCR, automatic Captions, Shayari generation, Object detection, Translate, Mood analysis, and curated Magic Picks. |
+| 🔄 **Reactive State** | Fluid UI adjustments driven completely via async Kotlin Coroutines lifecycle pipelines for real-time status fetching across WhatsApp & Business environments, video player control state, Export All Media (ZIP backup), and Cloud Sync data management operations. |
+| 💎 **Material Design** | Adaptive Jetpack Compose UI with dark mode toggle, seamless status previewing with built-in video controls (Send, Share, Save), Direct Chat functionality (send WhatsApp messages without saving contacts via country code picker), and a categorized offline Saved Files gallery (Photos & Videos). |
+| ⏰ **Automated Triggers** | Custom status Reminders system with a dedicated scheduler dashboard ("Today", "Scheduled", and "All Reminders" tracking lists) processing system-level alerts and notifications safely via system clock integrations. |
+| 🎨 **Asset Attribution** | Media action icons, platform selector cards (WhatsApp Regular & Business), and download utility vectors optimized from [Uxwing](https://uxwing.com/). |
 
 <details>
 <summary><b>📱 View App Screenshots (Click to Expand)</b></summary>
