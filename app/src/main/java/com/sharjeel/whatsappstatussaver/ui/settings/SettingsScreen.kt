@@ -30,11 +30,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sharjeel.whatsappstatussaver.theme.PrimaryGreen
+import com.sharjeel.whatsappstatussaver.theme.SecondaryGreen
 import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
-private val PrimaryGreen = Color(0xFF00A884)
-private val SecondaryGreen = Color(0xFF005E4C)
-private val DarkText = Color(0xFF1C2D2A)
 private val AccentGold = Color(0xFFFFD700)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,7 +108,7 @@ fun SettingsContent(
         topBar = {
             SettingsTopBar(onBack = onNavigateBack)
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -125,13 +124,20 @@ fun SettingsContent(
             SettingsSection(title = "General") {
                 SettingsRow(
                     icon = Icons.Default.DarkMode,
+                    iconTint = Color(0xFF7C4DFF),
                     title = "Dark Mode",
                     subtitle = "Switch between light and dark theme",
                     action = {
                         Switch(
                             checked = isDarkMode,
                             onCheckedChange = onDarkModeToggle,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryGreen)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF7C4DFF),
+                                uncheckedThumbColor = Color.Gray,
+                                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f),
+                                uncheckedBorderColor = Color.Gray
+                            )
                         )
                     }
                 )
@@ -140,6 +146,7 @@ fun SettingsContent(
             SettingsSection(title = "Storage") {
                 SettingsRow(
                     icon = Icons.Default.Folder,
+                    iconTint = Color(0xFFFBC02D),
                     title = "Save Location",
                     subtitle = if (customSaveLocation != null) Uri.decode(customSaveLocation) else "Default Storage",
                     onClick = onSelectFolder
@@ -149,6 +156,7 @@ fun SettingsContent(
             SettingsSection(title = "Data Management") {
                 SettingsRow(
                     icon = Icons.Default.CloudDownload,
+                    iconTint = Color(0xFF2196F3),
                     title = if (isExporting) "Exporting..." else "Export All Media",
                     subtitle = "Backup all saved statuses as a ZIP file",
                     onClick = onExportData,
@@ -156,6 +164,7 @@ fun SettingsContent(
                 )
                 SettingsRow(
                     icon = Icons.Default.CloudUpload,
+                    iconTint = Color(0xFF00A884),
                     title = "Cloud Sync",
                     subtitle = "Sync your media to the cloud",
                     onClick = onCloudBackup
@@ -209,7 +218,7 @@ private fun PremiumStatusCard(isPremium: Boolean, onUpgrade: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isPremium) SecondaryGreen else Color.White
+            containerColor = if (isPremium) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -237,17 +246,17 @@ private fun PremiumStatusCard(isPremium: Boolean, onUpgrade: () -> Unit) {
                     text = if (isPremium) "Premium Member" else "Upgrade to Premium",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = if (isPremium) Color.White else DarkText
+                    color = if (isPremium) Color.White else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = if (isPremium) "Thank you for supporting us!" else "Remove ads and unlock all tools",
                     fontSize = 13.sp,
-                    color = if (isPremium) Color.White.copy(alpha = 0.7f) else Color.Gray
+                    color = if (isPremium) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (!isPremium) {
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -260,12 +269,12 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = DarkText,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(start = 8.dp)
         )
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 2.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -281,6 +290,7 @@ fun SettingsRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     action: (@Composable () -> Unit)? = null
@@ -296,21 +306,21 @@ fun SettingsRow(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .background(PrimaryGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                .background(iconTint.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(22.dp))
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
         }
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontWeight = FontWeight.Bold, color = DarkText, fontSize = 16.sp)
-            Text(text = subtitle, fontSize = 13.sp, color = Color.Gray)
+            Text(text = title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
+            Text(text = subtitle, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
         if (action != null) {
             action()
         } else if (onClick != null) {
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
     }
 }
