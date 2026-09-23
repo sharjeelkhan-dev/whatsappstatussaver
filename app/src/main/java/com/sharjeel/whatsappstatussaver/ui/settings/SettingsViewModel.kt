@@ -8,10 +8,8 @@ import com.sharjeel.whatsappstatussaver.data.local.datastore.AppSettings
 import com.sharjeel.whatsappstatussaver.data.repository.CloudBackupRepository
 import com.sharjeel.whatsappstatussaver.domain.usecase.ExportMediaUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,8 +22,8 @@ class SettingsViewModel @Inject constructor(
     private val exportMediaUseCase: ExportMediaUseCase
 ) : ViewModel() {
 
-    private val _isDarkMode = MutableStateFlow(false)
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+    val isDarkMode: StateFlow<Boolean> = appSettings.isDarkModeFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val customSaveLocation: StateFlow<String?> = appSettings.customSaveLocationFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -33,7 +31,6 @@ class SettingsViewModel @Inject constructor(
     val isPremium = billingManager.isPremium
 
     fun setDarkMode(enabled: Boolean) {
-        _isDarkMode.value = enabled
         viewModelScope.launch {
             appSettings.setDarkMode(enabled)
         }
