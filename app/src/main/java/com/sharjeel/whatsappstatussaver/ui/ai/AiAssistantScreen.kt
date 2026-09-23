@@ -61,9 +61,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
-private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1F2937)
-private val LightText = Color(0xFF374151)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +125,7 @@ fun AiAssistantScreen(
                 }
             }
         },
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
@@ -164,7 +161,7 @@ fun AiAssistantScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shadowElevation = 4.dp,
-                color = Color.White
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Row(
                     modifier = Modifier
@@ -178,14 +175,16 @@ fun AiAssistantScreen(
                         value = inputText,
                         onValueChange = { inputText = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Ask anything...", color = Color.Gray) },
+                        placeholder = { Text("Ask anything...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         shape = RoundedCornerShape(28.dp),
                         maxLines = 4,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = PrimaryGreen,
-                            unfocusedBorderColor = Color(0xFFE5E7EB),
-                            focusedContainerColor = Color(0xFFF9FAFB),
-                            unfocusedContainerColor = Color(0xFFF9FAFB),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             cursorColor = PrimaryGreen
                         )
                     )
@@ -223,14 +222,14 @@ private fun GeminiStyleMessageItem(message: ChatMessage) {
             horizontalAlignment = Alignment.End
         ) {
             Surface(
-                color = SoftGreen,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
             ) {
                 Text(
                     text = message.text,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = DarkText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -238,14 +237,14 @@ private fun GeminiStyleMessageItem(message: ChatMessage) {
             }
         }
     } else {
-        // Direct Full-Width Raw Markdown Output (No Top Sparkle Badge/Header)
+        // Direct Full-Width Raw Markdown Output
         Text(
             text = parseGeminiMarkdown(message.text),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = DarkText,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 15.sp,
                 lineHeight = 25.sp
             )
@@ -269,8 +268,11 @@ private fun GeminiLoadingState() {
     }
 }
 
+@Composable
 private fun parseGeminiMarkdown(text: String): AnnotatedString {
     val lines = text.lines()
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
     return buildAnnotatedString {
         lines.forEachIndexed { index, rawLine ->
             var line = rawLine.trim()
@@ -290,7 +292,7 @@ private fun parseGeminiMarkdown(text: String): AnnotatedString {
                     style = SpanStyle(
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
-                        color = SecondaryGreen
+                        color = PrimaryGreen
                     )
                 ) {
                     append(line)
@@ -299,11 +301,11 @@ private fun parseGeminiMarkdown(text: String): AnnotatedString {
                 val parts = line.split("**")
                 parts.forEachIndexed { i, part ->
                     if (i % 2 == 1) {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = DarkText)) {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = onSurfaceColor)) {
                             append(part)
                         }
                     } else {
-                        withStyle(style = SpanStyle(color = LightText)) {
+                        withStyle(style = SpanStyle(color = onSurfaceVariantColor)) {
                             append(part)
                         }
                     }
@@ -329,7 +331,7 @@ private fun AiEmptyState(modifier: Modifier = Modifier) {
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .background(SoftGreen, CircleShape),
+                .background(PrimaryGreen.copy(alpha = 0.15f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -344,14 +346,14 @@ private fun AiEmptyState(modifier: Modifier = Modifier) {
             text = "AI Magic Assistant",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = DarkText,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Ask me anything about your statuses!",
             textAlign = TextAlign.Center,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth()
         )
