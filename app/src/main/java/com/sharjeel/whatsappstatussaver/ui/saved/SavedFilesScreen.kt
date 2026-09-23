@@ -74,7 +74,6 @@ import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1C2D2A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,7 +139,7 @@ fun SavedFilesContent(
                 onDelete = onDeleteSelectedFiles
             )
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -284,7 +283,7 @@ private fun TabItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
             text = label,
             fontSize = 16.sp,
             fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-            color = if (isSelected) PrimaryGreen else Color.Gray
+            color = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -314,8 +313,8 @@ private fun SavedMediaItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete File", fontWeight = FontWeight.Bold) },
-            text = { Text("Are you sure you want to delete this file permanently?") },
+            title = { Text("Delete File", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Are you sure you want to delete this file permanently?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete()
@@ -326,11 +325,11 @@ private fun SavedMediaItem(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = Color.Gray)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             shape = RoundedCornerShape(28.dp),
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
@@ -406,9 +405,9 @@ private fun SavedEmptyState(message: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(80.dp), tint = Color.LightGray)
+        Icon(Icons.Default.CloudOff, contentDescription = null, modifier = Modifier.size(80.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = message, textAlign = TextAlign.Center, color = Color.Gray, fontSize = 16.sp)
+        Text(text = message, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
     }
 }
 
