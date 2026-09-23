@@ -82,7 +82,6 @@ import java.util.Locale
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1C2D2A)
 
 enum class ReminderScreenType { DASHBOARD, LIST, ADD }
 
@@ -144,7 +143,7 @@ fun ReminderDashboardScreen(
                 elevation = FloatingActionButtonDefaults.elevation(8.dp)
             ) { Icon(Icons.Default.Add, contentDescription = "Add") }
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -171,7 +170,7 @@ fun ReminderDashboardScreen(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("My Lists", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = DarkText)
+                Text("My Lists", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
                 ReminderListCard(
                     title = "All Reminders",
                     count = reminders.size,
@@ -223,17 +222,17 @@ fun ReminderStatCard(title: String, count: Int, icon: ImageVector, modifier: Mod
     Card(
         modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
             Box(
-                modifier = Modifier.size(40.dp).background(color.copy(alpha = 0.1f), CircleShape),
+                modifier = Modifier.size(40.dp).background(color.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) { Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp)) }
             Column {
-                Text(text = count.toString(), fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = DarkText)
-                Text(text = title, fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Medium)
+                Text(text = count.toString(), fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = title, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -245,18 +244,18 @@ fun ReminderListCard(title: String, count: Int, icon: ImageVector, onClick: () -
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(48.dp).background(PrimaryGreen.copy(alpha = 0.1f), RoundedCornerShape(14.dp)),
+                modifier = Modifier.size(48.dp).background(PrimaryGreen.copy(alpha = 0.15f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center
             ) { Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(24.dp)) }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = title, modifier = Modifier.weight(1f), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
-            Text(text = count.toString(), fontSize = 16.sp, color = Color.Gray, modifier = Modifier.padding(end = 8.dp))
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+            Text(text = title, modifier = Modifier.weight(1f), fontSize = 17.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = count.toString(), fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 8.dp))
+            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -281,7 +280,7 @@ fun ReminderListScreen(
             FloatingActionButton(onClick = onAddNew, containerColor = PrimaryGreen, contentColor = Color.White, shape = CircleShape)
             { Icon(Icons.Default.Add, contentDescription = "Add") }
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 24.dp)) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -289,19 +288,21 @@ fun ReminderListScreen(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search your tasks...") },
+                placeholder = { Text("Search your tasks...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryGreen) },
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = PrimaryGreen,
-                    unfocusedBorderColor = Color.Transparent,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
             Spacer(modifier = Modifier.height(24.dp))
             if (filteredReminders.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No reminders found.", color = Color.Gray) }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No reminders found.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             } else {
                 val grouped = filteredReminders.groupBy {
                     val cal = Calendar.getInstance().apply { timeInMillis = it.date }
@@ -310,7 +311,7 @@ fun ReminderListScreen(
                 }
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                     grouped.forEach { (header, list) ->
-                        Text(text = header, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = DarkText, modifier = Modifier.padding(vertical = 12.dp))
+                        Text(text = header, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(vertical = 12.dp))
                         list.forEach { reminder ->
                             ReminderItem(reminder = reminder, onToggle = { onToggleCompletion(reminder) }, onDelete = { onDelete(reminder) })
                             Spacer(modifier = Modifier.height(12.dp))
@@ -328,7 +329,7 @@ fun ReminderItem(reminder: ReminderEntity, onToggle: () -> Unit, onDelete: () ->
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -337,17 +338,17 @@ fun ReminderItem(reminder: ReminderEntity, onToggle: () -> Unit, onDelete: () ->
                 Icon(
                     imageVector = if (reminder.isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                     contentDescription = null,
-                    tint = if (reminder.isCompleted) PrimaryGreen else Color.LightGray,
+                    tint = if (reminder.isCompleted) PrimaryGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(28.dp)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = reminder.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DarkText)
-                Text(text = dateFormatter.format(Date(reminder.date)), fontSize = 13.sp, color = Color.Gray)
+                Text(text = reminder.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = dateFormatter.format(Date(reminder.date)), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = onDelete) {
-                Icon(painter = painterResource(id = R.drawable.recycle_bin_icon), contentDescription = null, tint = Color.Red.copy(alpha = 0.4f), modifier = Modifier.size(20.dp))
+                Icon(painter = painterResource(id = R.drawable.recycle_bin_icon), contentDescription = null, tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -371,7 +372,7 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("New Reminder", fontWeight = FontWeight.Bold) },
+                title = { Text("New Reminder", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
                 navigationIcon = { TextButton(onClick = onCancel) { Text("Cancel", color = PrimaryGreen) } },
                 actions = {
                     Button(
@@ -384,27 +385,37 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
                         shape = RoundedCornerShape(12.dp)
                     ) { Text("Save") }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text("Details", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+            Text("Details", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
             OutlinedTextField(
                 value = title, onValueChange = { title = it }, modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("What should we remind you?") },
+                placeholder = { Text("What should we remind you?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryGreen, unfocusedBorderColor = Color.LightGray)
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryGreen,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
             OutlinedTextField(
                 value = description, onValueChange = { description = it }, modifier = Modifier.fillMaxWidth().height(120.dp),
-                placeholder = { Text("Description (Optional)") },
+                placeholder = { Text("Description (Optional)", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PrimaryGreen, unfocusedBorderColor = Color.LightGray)
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimaryGreen,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
             )
 
-            Text("Schedule", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+            Text("Schedule", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ScheduleItem(icon = Icons.Default.CalendarToday, label = dateFormatter.format(Date(selectedDate)), modifier = Modifier.weight(1f)) {
                     val cal = Calendar.getInstance(); DatePickerDialog(context, { _, y, m, d -> val c = Calendar.getInstance(); c.set(y, m, d); selectedDate = c.timeInMillis }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
@@ -414,7 +425,7 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
                 }
             }
 
-            Text("Priority", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = DarkText)
+            Text("Priority", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PriorityChoice(label = "High", isSelected = priority == "High") { priority = "High" }
                 PriorityChoice(label = "Medium", isSelected = priority == "Medium") { priority = "Medium" }
@@ -422,9 +433,9 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            Surface(shape = RoundedCornerShape(20.dp), color = Color.White, shadowElevation = 1.dp) {
+            Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surface, shadowElevation = 1.dp) {
                 Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Get notified", fontWeight = FontWeight.Bold, color = DarkText)
+                    Text("Get notified", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Switch(checked = isAlertEnabled, onCheckedChange = { isAlertEnabled = it }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryGreen))
                 }
             }
@@ -434,19 +445,19 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
 
 @Composable
 fun ScheduleItem(icon: ImageVector, label: String, modifier: Modifier, onClick: () -> Unit) {
-    Surface(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), color = Color.White, border = BorderStroke(1.dp, Color.LightGray)) {
+    Surface(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = PrimaryGreen, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
 
 @Composable
 fun RowScope.PriorityChoice(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    Surface(onClick = onClick, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(12.dp), color = if (isSelected) PrimaryGreen else Color.White, border = if (!isSelected) BorderStroke(1.dp, Color.LightGray) else null) {
-        Box(contentAlignment = Alignment.Center) { Text(label, color = if (isSelected) Color.White else Color.Gray, fontWeight = FontWeight.Bold) }
+    Surface(onClick = onClick, modifier = Modifier.weight(1f).height(44.dp), shape = RoundedCornerShape(12.dp), color = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.surface, border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline) else null) {
+        Box(contentAlignment = Alignment.Center) { Text(label, color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold) }
     }
 }
 
