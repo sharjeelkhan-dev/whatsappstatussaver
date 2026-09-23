@@ -17,9 +17,9 @@
 <table width="100%">
   <!-- Row 1: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3fd4fbe3-2a12-4bf6-9e33-7529bf053518" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/c4154f6b-db5f-40ff-b367-b49dc1e9c134" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/3e5f9e84-8d86-494a-bd9a-a683e141532f" width="100%" alt="Screen 3" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/26889788-4cd2-437f-b529-dc571b12a4ee" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/b5347614-19d0-4f99-8b27-191041f6d01e" width="100%" alt="Screen 2" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5efa111d-c8ea-45ab-96c0-665944cb66a7" width="100%" alt="Screen 3" /></td>
   </tr>
   <!-- Row 1: Details -->
   <tr>
@@ -30,22 +30,22 @@
 
   <!-- Row 2: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/dbc6ba7a-f696-4a78-abc4-dd1b8033f1f7" width="100%" alt="Screen 4" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/279212b1-496e-4f0b-9c7f-b66d72562428" width="100%" alt="Screen 5" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a8edf568-2ee4-433b-9ed6-a188f5fcaf99" width="100%" alt="Screen 6" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a6aa35ae-ed38-4466-bd9f-f498c02105b7" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/02630cdb-bace-4b00-bcc8-c697a8a8f449" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/029cd66b-0f31-426d-b265-16b51b1b73d2" width="100%" alt="Screen 6" /></td>
   </tr>
   <!-- Row 2: Details -->
   <tr>
     <td align="center"><b>Screen 4:</b> Status Video </td>
     <td align="center"><b>Screen 5:</b> AI Status Magic </td>
-    <td align="center"><b>Screen 6:</b> Captions Generated </td>
+    <td align="center"><b>Screen 6:</b> AI Analysis </td>
   </tr>
 
   <!-- Row 3: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5bf18169-2fea-487b-b639-521e2138784c" width="100%" alt="Screen 7" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/009425e0-4442-442d-b98a-7aa16ba70527" width="100%" alt="Screen 8" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a70c9988-3e86-4df1-94e3-af38a841c6cf" width="100%" alt="Screen 9" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/2da4394c-6478-42d1-9c78-afa89b4cf849" width="100%" alt="Screen 7" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/9ad72d53-e5cb-48ce-8fa0-178a9bba1ecc" width="100%" alt="Screen 8" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/74ad1314-d2bc-4bd4-8053-7afc31e375fa" width="100%" alt="Screen 9" /></td>
   </tr>
   <!-- Row 3: Details -->
   <tr>
