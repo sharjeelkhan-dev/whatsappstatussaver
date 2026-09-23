@@ -199,11 +199,11 @@ fun ProfilePhotosScreenContent(
                         modifier = Modifier
                             .padding(8.dp)
                             .size(36.dp)
-                            .background(Color(0xFFE0F2F1), RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                     ) {
                         Icon(Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = Color.Black,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(18.dp))
                     }
                 },
@@ -215,8 +215,8 @@ fun ProfilePhotosScreenContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
@@ -226,14 +226,14 @@ fun ProfilePhotosScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             if (uiState.downloadProgress != null) {
                 LinearProgressIndicator(
                     progress = { uiState.downloadProgress },
                     modifier = Modifier.fillMaxWidth(),
                     color = AppTeal,
-                    trackColor = Color(0xFFE0F2F1)
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
 
@@ -243,7 +243,7 @@ fun ProfilePhotosScreenContent(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .height(44.dp)
-                        .background(Color(0xFFE0F2F1), RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -312,7 +312,8 @@ fun PermissionGuide(platform: PlatformType, onGrant: () -> Unit) {
         Text(
             text = "Storage Permission Needed",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(
@@ -343,7 +344,7 @@ fun PlatformButton(
     ) {
         Text(
             text = title,
-            color = if (selected) Color.White else AppTeal,
+            color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp
         )
@@ -466,7 +467,7 @@ fun EmptyState(
     ) {
         Text(
             text = message,
-            color = Color.DarkGray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 16.sp,
             modifier = Modifier.padding(horizontal = 32.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
