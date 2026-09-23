@@ -64,7 +64,6 @@ import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
-private val DarkText = Color(0xFF1C2D2A)
 
 @Composable
 fun HomeScreen(
@@ -116,7 +115,7 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color(0xFFFBFDFF),
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
@@ -276,7 +275,7 @@ private fun ToolGridItem(
         Surface(
             onClick = onClick,
             shape = RoundedCornerShape(20.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 6.dp,
             modifier = Modifier.size(64.dp)
         ) {
@@ -285,7 +284,10 @@ private fun ToolGridItem(
                     .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(Color(0xFFF1F8E9), Color.White)
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                MaterialTheme.colorScheme.surface
+                            )
                         )
                     ),
                 contentAlignment = Alignment.Center
@@ -302,7 +304,7 @@ private fun ToolGridItem(
             text = title,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = DarkText,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -375,7 +377,7 @@ private fun SectionTitle(title: String) {
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = DarkText,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.padding(start = 8.dp)
     )
 }
@@ -384,8 +386,8 @@ private fun SectionTitle(title: String) {
 private fun PermissionDialog(onDismiss: () -> Unit, onOpenSettings: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Permissions Needed", fontWeight = FontWeight.Bold) },
-        text = { Text("To set reminders, we need notification and alarm permissions. Please enable them in settings.") },
+        title = { Text("Permissions Needed", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+        text = { Text("To set reminders, we need notification and alarm permissions. Please enable them in settings.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
         confirmButton = {
             TextButton(onClick = onOpenSettings) {
                 Text("Settings", color = PrimaryGreen, fontWeight = FontWeight.Bold)
@@ -393,10 +395,10 @@ private fun PermissionDialog(onDismiss: () -> Unit, onOpenSettings: () -> Unit) 
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Later", color = Color.Gray)
+                Text("Later", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(28.dp)
     )
 }
