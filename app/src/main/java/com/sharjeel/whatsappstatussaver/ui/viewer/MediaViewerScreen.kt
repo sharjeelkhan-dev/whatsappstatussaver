@@ -11,6 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -40,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -68,7 +70,6 @@ import kotlin.time.Duration.Companion.milliseconds
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
-private val DarkText = Color(0xFF1C2D2A)
 
 private fun copyUriToCache(context: Context, uri: Uri): Uri {
     return try {
@@ -117,7 +118,7 @@ fun MediaViewerScreen(
     if (showMagicSheet) {
         ModalBottomSheet(
             onDismissRequest = { showMagicSheet = false },
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
         ) {
             MagicContent(
@@ -444,11 +445,11 @@ fun MediaViewerScreen(
         if (showPlatformDialog) {
             AlertDialog(
                 onDismissRequest = { showPlatformDialog = false },
-                title = { Text("Open with") },
-                text = { Text("Select your WhatsApp version") },
+                title = { Text("Open with", color = MaterialTheme.colorScheme.onSurface) },
+                text = { Text("Select your WhatsApp version", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 confirmButton = { TextButton(onClick = { pendingShareAction?.invoke(PlatformType.WHATSAPP); showPlatformDialog = false }) { Text("WhatsApp", color = PrimaryGreen) } },
                 dismissButton = { TextButton(onClick = { pendingShareAction?.invoke(PlatformType.WHATSAPP_BUSINESS); showPlatformDialog = false }) { Text("Business", color = PrimaryGreen) } },
-                shape = RoundedCornerShape(24.dp), containerColor = Color.White
+                shape = RoundedCornerShape(24.dp), containerColor = MaterialTheme.colorScheme.surface
             )
         }
     }
@@ -491,7 +492,7 @@ private fun MagicContent(uiState: MagicUiState, onAction: (MagicType) -> Unit, o
             text = "AI Status Magic",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
-            color = DarkText
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -612,7 +613,7 @@ private fun MagicContent(uiState: MagicUiState, onAction: (MagicType) -> Unit, o
                         text = parseMagicMarkdown(uiState.result),
                         modifier = Modifier.fillMaxWidth(),
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            color = DarkText,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 15.sp,
                             lineHeight = 25.sp
                         )
@@ -664,8 +665,8 @@ private fun MagicButton(
         onClick = onClick,
         modifier = modifier.height(72.dp),
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFF8FAFB),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB))
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -682,14 +683,17 @@ private fun MagicButton(
                 text = label,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = DarkText
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
-private fun parseMagicMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
+@Composable
+private fun parseMagicMarkdown(text: String): AnnotatedString {
     val lines = text.lines()
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
     return buildAnnotatedString {
         lines.forEachIndexed { index, rawLine ->
             var line = rawLine.trim()
@@ -721,14 +725,14 @@ private fun parseMagicMarkdown(text: String): androidx.compose.ui.text.Annotated
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.Bold,
-                                color = DarkText
+                                color = onSurfaceColor
                             )
                         ) {
                             append(part)
                         }
                     } else {
                         withStyle(
-                            style = SpanStyle(color = Color(0xFF374151))
+                            style = SpanStyle(color = onSurfaceVariantColor)
                         ) {
                             append(part)
                         }
