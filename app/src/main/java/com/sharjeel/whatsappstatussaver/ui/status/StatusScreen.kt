@@ -79,7 +79,6 @@ import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
-private val DarkText = Color(0xFF1C2D2A)
 
 @Composable
 fun StatusScreen(
@@ -177,7 +176,7 @@ fun StatusScreenContent(
                 onSaveSelected = onSaveSelected
             )
         },
-        containerColor = Color(0xFFFBFDFF)
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -299,7 +298,7 @@ private fun PlatformSwitcher(
             .fillMaxWidth()
             .padding(16.dp),
         shape = RoundedCornerShape(20.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 4.dp
     ) {
         Row(
@@ -339,7 +338,7 @@ private fun PlatformToggle(
     ) {
         Text(
             text = title,
-            color = if (isSelected) Color.White else DarkText,
+            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp
         )
@@ -369,7 +368,7 @@ private fun TabItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
             text = label,
             fontSize = 16.sp,
             fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-            color = if (isSelected) PrimaryGreen else Color.Gray
+            color = if (isSelected) PrimaryGreen else MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
@@ -530,12 +529,12 @@ private fun StatusPermissionGuide(onGrant: () -> Unit) {
             "Access Required",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = DarkText
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             "We need permission to access WhatsApp status folder to show you photos and videos.",
             textAlign = TextAlign.Center,
-            color = Color.Gray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp)
         )
         Spacer(modifier = Modifier.height(32.dp))
