@@ -23,8 +23,13 @@ enum class MagicType {
 
 @HiltViewModel
 class MagicViewModel @Inject constructor(
-    private val aiRepository: AiRepository
+    private val aiRepository: AiRepository,
+    private val audioExtractorUseCase: com.sharjeel.whatsappstatussaver.domain.usecase.AudioExtractorUseCase
 ) : ViewModel() {
+
+    suspend fun extractAudio(uri: android.net.Uri): android.net.Uri? {
+        return audioExtractorUseCase(uri)
+    }
 
     private val _uiState = MutableStateFlow<MagicUiState>(MagicUiState.Idle)
     val uiState = _uiState.asStateFlow()
