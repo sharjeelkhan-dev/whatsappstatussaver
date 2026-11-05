@@ -119,6 +119,12 @@ dependencies {
   implementation(libs.firebase.appcheck.debug)
   implementation(libs.billing.ktx)
 
+  // Biometric Security
+  implementation("androidx.biometric:biometric:1.1.0")
+
+  // ML Kit OCR Text Recognition
+  implementation("com.google.mlkit:text-recognition:16.0.1")
+
   // Network (Retrofit & Moshi)
   implementation("com.squareup.retrofit2:retrofit:2.11.0")
   implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
