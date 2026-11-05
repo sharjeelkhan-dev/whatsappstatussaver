@@ -26,6 +26,8 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Splash : Screen("splash")
     object AiAssistant : Screen("ai_assistant")
+    object VideoSplitter : Screen("video_splitter")
+    object Vault : Screen("vault")
 
     object MediaViewer : Screen("viewer?uri={uri}&type={type}&name={name}&platform={platform}") {
         fun createRoute(uri: String, type: MediaType, name: String, platform: PlatformType): String {
@@ -65,7 +67,16 @@ fun WhatsAppStatusSaverNavHost(
                 onNavigateToSavedFiles = { navController.navigate(Screen.SavedFiles.route) },
                 onNavigateToReminder = { navController.navigate(Screen.Reminder.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
-                onNavigateToAiAssistant = { navController.navigate(Screen.AiAssistant.route) }
+                onNavigateToAiAssistant = { navController.navigate(Screen.AiAssistant.route) },
+                onNavigateToVideoSplitter = { navController.navigate(Screen.VideoSplitter.route) }
+            )
+        }
+        composable(Screen.VideoSplitter.route) {
+            com.sharjeel.whatsappstatussaver.ui.splitter.VideoSplitterScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToViewer = { uri, type, name ->
+                    navController.navigate(Screen.MediaViewer.createRoute(uri.toString(), type, name, PlatformType.SAVED))
+                }
             )
         }
         composable(Screen.AiAssistant.route) {
@@ -93,6 +104,15 @@ fun WhatsAppStatusSaverNavHost(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToViewer = { uri, type, name ->
                     navController.navigate(Screen.MediaViewer.createRoute(uri, type, name, PlatformType.SAVED))
+                },
+                onNavigateToVault = { navController.navigate(Screen.Vault.route) }
+            )
+        }
+        composable(Screen.Vault.route) {
+            com.sharjeel.whatsappstatussaver.ui.vault.VaultScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToViewer = { media ->
+                    navController.navigate(Screen.MediaViewer.createRoute(media.uri.toString(), media.type, media.name, PlatformType.SAVED))
                 }
             )
         }
