@@ -16,11 +16,12 @@ import com.sharjeel.whatsappstatussaver.ui.navigation.WhatsAppStatusSaverNavHost
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.fragment.app.FragmentActivity
 import dagger.hilt.android.AndroidEntryPoint
 import com.sharjeel.whatsappstatussaver.ui.settings.SettingsViewModel
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val settingsViewModel: SettingsViewModel by viewModels()
 
