@@ -105,7 +105,8 @@ fun MediaViewerScreen(
     onTagUpdate: ((String) -> Unit)? = null,
     onCompressVideo: (suspend (Uri) -> Uri?)? = null,
     modifier: Modifier = Modifier,
-    magicViewModel: MagicViewModel = hiltViewModel()
+    magicViewModel: MagicViewModel = hiltViewModel(),
+    vaultViewModel: com.sharjeel.whatsappstatussaver.ui.vault.VaultViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -165,9 +166,10 @@ fun MediaViewerScreen(
     val exoPlayer = remember(statusMedia.uri) {
         if (statusMedia.type == MediaType.VIDEO && !isInspectionMode) {
             ExoPlayer.Builder(context).build().apply {
-                val mimeType = if (statusMedia.uri.scheme == "content") context.contentResolver.getType(statusMedia.uri) ?: "video/mp4"
-                else "video/mp4"
-                setMediaItem(MediaItem.Builder().setUri(statusMedia.uri).setMimeType(mimeType).build())
+                val path = statusMedia.uri.path ?: statusMedia.uri.toString()
+                val file = if (statusMedia.uri.scheme == "file") File(path) else File(path)
+                val playableUri = if (file.exists()) Uri.fromFile(file) else copyUriToCache(context, statusMedia.uri)
+                setMediaItem(MediaItem.fromUri(playableUri))
                 prepare()
                 playWhenReady = true
                 repeatMode = Player.REPEAT_MODE_ONE
@@ -275,6 +277,41 @@ fun MediaViewerScreen(
                     ViewerActionButton(icon = ImageVector.vectorResource(id = R.drawable.import_icon),
                         label = "Save", color = Color(0xFF4CAF50)) {
                         try { onSaveMedia(statusMedia); Toast.makeText(context, "Saved!", Toast.LENGTH_SHORT).show() } catch (_: Exception) { }
+                    }
+
+                    ViewerActionButton(
+                        icon = Icons.Default.Lock,
+                        label = "Vault",
+                        color = Color(0xFF9C27B0)
+                    ) {
+                        try {
+                            onSaveMedia(statusMedia)
+                            vaultViewModel.moveToVault(statusMedia)
+                            Toast.makeText(context, "Added to Private Vault!", Toast.LENGTH_SHORT).show()
+                        } catch (_: Exception) { }
+                    }
+
+                    if (statusMedia.type == MediaType.VIDEO) {
+                        ViewerActionButton(
+                            icon = Icons.Default.Audiotrack,
+                            label = "Extract MP3",
+                            color = Color(0xFFFF9800)
+                        ) {
+                            coroutineScope.launch {
+                                Toast.makeText(context, "Extracting audio...", Toast.LENGTH_SHORT).show()
+                                val audioUri = magicViewModel.extractAudio(statusMedia.uri)
+                                if (audioUri != null) {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "audio/*"
+                                        putExtra(Intent.EXTRA_STREAM, copyUriToCache(context, audioUri))
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, "Share Extracted Audio"))
+                                } else {
+                                    Toast.makeText(context, "Failed to extract audio", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
                     }
                 }
             }
