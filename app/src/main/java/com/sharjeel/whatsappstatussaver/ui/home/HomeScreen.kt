@@ -39,6 +39,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +75,7 @@ fun HomeScreen(
     onNavigateToReminder: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAiAssistant: () -> Unit,
+    onNavigateToVideoSplitter: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -139,7 +142,8 @@ fun HomeScreen(
                     onDirectChat = onNavigateToDirectChat,
                     onSavedFiles = onNavigateToSavedFiles,
                     onReminder = { checkAndNavigateToReminder() },
-                    onAiAssistant = onNavigateToAiAssistant
+                    onAiAssistant = onNavigateToAiAssistant,
+                    onVideoSplitter = onNavigateToVideoSplitter
                 )
             }
         }
@@ -228,33 +232,56 @@ private fun ToolsSection(
     onDirectChat: () -> Unit,
     onSavedFiles: () -> Unit,
     onReminder: () -> Unit,
-    onAiAssistant: () -> Unit
+    onAiAssistant: () -> Unit,
+    onVideoSplitter: () -> Unit
 ) {
-    val context = LocalContext.current
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SectionTitle(title = "Premium Tools")
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            val tools = listOf(
-                Triple("AI Magic", R.drawable.ai_sparkles_icon, onAiAssistant),
-                Triple("DirectChat", R.drawable.navigate_icon, onDirectChat),
-                Triple("Gallery", R.drawable.picture_icon, onSavedFiles),
-                Triple("Reminder", R.drawable.alarm_clock_icon, onReminder),
-            )
-
-            tools.forEach { (title, iconRes, onClick) ->
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 ToolGridItem(
-                    title = title,
-                    icon = ImageVector.vectorResource(id = iconRes),
+                    title = "AI Magic",
+                    icon = ImageVector.vectorResource(id = R.drawable.ai_sparkles_icon),
                     modifier = Modifier.weight(1f),
-                    onClick = onClick
+                    onClick = onAiAssistant
                 )
+                ToolGridItem(
+                    title = "DirectChat",
+                    icon = ImageVector.vectorResource(id = R.drawable.navigate_icon),
+                    modifier = Modifier.weight(1f),
+                    onClick = onDirectChat
+                )
+                ToolGridItem(
+                    title = "Gallery",
+                    icon = ImageVector.vectorResource(id = R.drawable.picture_icon),
+                    modifier = Modifier.weight(1f),
+                    onClick = onSavedFiles
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ToolGridItem(
+                    title = "30s Splitter",
+                    icon = Icons.Default.ContentCut,
+                    modifier = Modifier.weight(1f),
+                    onClick = onVideoSplitter
+                )
+                ToolGridItem(
+                    title = "Reminder",
+                    icon = ImageVector.vectorResource(id = R.drawable.alarm_clock_icon),
+                    modifier = Modifier.weight(1f),
+                    onClick = onReminder
+                )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
