@@ -20,9 +20,9 @@
 <table width="100%">
   <!-- Row 1: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/61146fb7-f624-43ed-8db7-8a7afff1b005" width="100%" alt="Screen 1" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/b5347614-19d0-4f99-8b27-191041f6d01e" width="100%" alt="Screen 2" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/5efa111d-c8ea-45ab-96c0-665944cb66a7" width="100%" alt="Screen 3" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/8fb01679-4c49-463d-a41c-04a4a4a5c5d8" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/0f0c67f3-a9fb-4bda-bcf9-8302734e7fd2" width="100%" alt="Screen 2" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/825a26ec-1eb2-42ae-865c-9c332a53fe3b" width="100%" alt="Screen 3" /></td>
   </tr>
   <!-- Row 1: Details -->
   <tr>
@@ -33,9 +33,9 @@
 
   <!-- Row 2: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a6aa35ae-ed38-4466-bd9f-f498c02105b7" width="100%" alt="Screen 4" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/02630cdb-bace-4b00-bcc8-c697a8a8f449" width="100%" alt="Screen 5" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/029cd66b-0f31-426d-b265-16b51b1b73d2" width="100%" alt="Screen 6" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/d5db3e48-aec7-4117-96ae-fd6e68c428a3" width="100%" alt="Screen 4" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/ce3eb02f-528d-4f76-acbc-7de821fd6873" width="100%" alt="Screen 5" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/177fe0bf-326a-4982-baaa-8fa524266c48" width="100%" alt="Screen 6" /></td>
   </tr>
   <!-- Row 2: Details -->
   <tr>
@@ -46,16 +46,30 @@
 
   <!-- Row 3: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/2da4394c-6478-42d1-9c78-afa89b4cf849" width="100%" alt="Screen 7" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/9ad72d53-e5cb-48ce-8fa0-178a9bba1ecc" width="100%" alt="Screen 8" /></td>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/74ad1314-d2bc-4bd4-8053-7afc31e375fa" width="100%" alt="Screen 9" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/c291ed40-5789-4981-8b36-7efddcd3a6fe" width="100%" alt="Screen 7" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/e4320c70-933d-4be5-9ec4-5575ba291013" width="100%" alt="Screen 8" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/2d8bfb61-94d9-48a5-8684-a8f579cfa854" width="100%" alt="Screen 9" /></td>
   </tr>
   <!-- Row 3: Details -->
   <tr>
     <td align="center"><b>Screen 7:</b> Saved Files </td>
     <td align="center"><b>Screen 8:</b> Reminder Screen </td>
-    <td align="center"><b>Screen 9:</b> Settings Screen </td>
+    <td align="center"><b>Screen 9:</b> Spliter Screen </td>
   </tr>
+
+   <!-- Row 4: Images -->
+  <tr>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/a9f6b4bf-2fc4-4de8-95ee-cc51af6278fd" width="100%" alt="Screen 7" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/ea902a93-2ff7-486b-b1e1-2e35cb05fba6" width="100%" alt="Screen 8" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/817f2764-1f0a-4126-b6bb-f9005491a6b0" width="100%" alt="Screen 9" /></td>
+  </tr>
+  <!-- Row 4: Details -->
+  <tr>
+    <td align="center"><b>Screen 7:</b> Recovery Messages </td>
+    <td align="center"><b>Screen 8:</b> Vault Screen </td>
+    <td align="center"><b>Screen 8:</b> Settings Screen </td>
+  </tr>
+  
 </table>
 </details>
 
