@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -37,6 +38,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -55,6 +57,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,7 +65,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiAssistantScreen(
     onBack: () -> Unit,
@@ -70,6 +72,21 @@ fun AiAssistantScreen(
     viewModel: AiAssistantViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    AiAssistantContent(
+        uiState = uiState,
+        onBack = onBack,
+        onSendMessage = { viewModel.sendMessage(it) },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun AiAssistantContent(
+    uiState: AiUiState,
+    onBack: () -> Unit,
+    onSendMessage: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -78,19 +95,18 @@ fun AiAssistantScreen(
             listState.animateScrollToItem(uiState.messages.size - 1)
         }
     }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
                     .background(
                         brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
                         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 5.dp)
             ) {
                 Row(
                     modifier = Modifier.align(Alignment.CenterStart),
@@ -100,24 +116,24 @@ fun AiAssistantScreen(
                         onClick = onBack,
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f))
+                            .offset(y = (-5).dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
-                        )
+                            tint = Color.White)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "AI Assistant",
+                            modifier = Modifier.offset(y = (-5).dp),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
                             text = "Online",
+                            modifier = Modifier.offset(y = (-5).dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -192,7 +208,7 @@ fun AiAssistantScreen(
                     FloatingActionButton(
                         onClick = {
                             if (inputText.isNotBlank() && !uiState.isLoading) {
-                                viewModel.sendMessage(inputText)
+                                onSendMessage(inputText)
                                 inputText = ""
                             }
                         },
@@ -357,5 +373,30 @@ private fun AiEmptyState(modifier: Modifier = Modifier) {
             fontSize = 14.sp,
             modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+// --- Preview Composable ---
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Light Mode", showBackground = true)
+@Preview(name = "Dark Mode", showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+fun AiAssistantScreenPreview() {
+    MaterialTheme(
+        colorScheme = lightColorScheme()
+    ) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            AiAssistantContent(
+                uiState = AiUiState(
+                    messages = listOf(
+                        ChatMessage("Can you summarize my statuses?", true),
+                        ChatMessage("You have 5 new image statuses and 2 video statuses saved today!\n\n### Summary\n* **Images**: 5\n* **Videos**: 2", false)
+                    ),
+                    isLoading = false
+                ),
+                onBack = {},
+                onSendMessage = {}
+            )
+        }
     }
 }
