@@ -66,9 +66,9 @@
   </tr>
   <!-- Row 4: Details -->
   <tr>
-    <td align="center"><b>Screen 7:</b> Recovery Messages </td>
-    <td align="center"><b>Screen 8:</b> Vault Screen </td>
-    <td align="center"><b>Screen 8:</b> Settings Screen </td>
+    <td align="center"><b>Screen 10:</b> Recovery Messages </td>
+    <td align="center"><b>Screen 11:</b> Vault Screen </td>
+    <td align="center"><b>Screen 12:</b> Settings Screen </td>
   </tr>
   
 </table>
