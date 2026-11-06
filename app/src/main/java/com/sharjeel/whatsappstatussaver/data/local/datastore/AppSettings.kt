@@ -26,6 +26,7 @@ class AppSettings @Inject constructor(
     companion object {
         val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val AUTO_SAVE_ENABLED = booleanPreferencesKey("auto_save_enabled")
         val CUSTOM_SAVE_LOCATION = androidx.datastore.preferences.core.stringPreferencesKey("custom_save_location")
     }
 
@@ -60,7 +61,7 @@ class AppSettings @Inject constructor(
             preferences[IS_DARK_MODE] = isDark
         }
     }
-    
+
     val notificationsEnabledFlow: Flow<Boolean> = dataStore.data
         .catch { exception ->
             if (exception is IOException) emit(emptyPreferences()) else throw exception
@@ -72,6 +73,20 @@ class AppSettings @Inject constructor(
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[NOTIFICATIONS_ENABLED] = enabled
+        }
+    }
+
+    val autoSaveEnabledFlow: Flow<Boolean> = dataStore.data
+        .catch { exception ->
+            if (exception is IOException) emit(emptyPreferences()) else throw exception
+        }
+        .map { preferences ->
+            preferences[AUTO_SAVE_ENABLED] ?: false // Default false
+        }
+
+    suspend fun setAutoSaveEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[AUTO_SAVE_ENABLED] = enabled
         }
     }
 }
