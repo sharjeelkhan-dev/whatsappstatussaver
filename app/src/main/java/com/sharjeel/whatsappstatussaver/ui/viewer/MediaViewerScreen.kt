@@ -104,17 +104,20 @@ fun MediaViewerScreen(
     onSaveMedia: (StatusMedia) -> Unit,
     onTagUpdate: ((String) -> Unit)? = null,
     onCompressVideo: (suspend (Uri) -> Uri?)? = null,
-    modifier: Modifier = Modifier,
-    magicViewModel: MagicViewModel = hiltViewModel(),
-    vaultViewModel: com.sharjeel.whatsappstatussaver.ui.vault.VaultViewModel = hiltViewModel()
+    modifier: Modifier = Modifier
 ) {
+    val isInspectionMode = LocalInspectionMode.current
+    val magicViewModel: MagicViewModel? = if (!isInspectionMode) hiltViewModel() else null
+    val vaultViewModel: com.sharjeel.whatsappstatussaver.ui.vault.VaultViewModel? = if (!isInspectionMode) hiltViewModel() else null
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isCompressing by remember { mutableStateOf(false) }
     var showPlatformDialog by remember { mutableStateOf(false) }
     var pendingShareAction by remember { mutableStateOf<((PlatformType) -> Unit)?>(null) }
     var showMagicSheet by remember { mutableStateOf(false) }
-    val magicUiState by magicViewModel.uiState.collectAsState()
+    val dummyMagicState = remember { mutableStateOf<MagicUiState>(MagicUiState.Idle) }
+    val magicUiState by (magicViewModel?.uiState?.collectAsState() ?: dummyMagicState)
 
     if (showMagicSheet) {
         ModalBottomSheet(
@@ -129,7 +132,7 @@ fun MediaViewerScreen(
                         if (statusMedia.type == MediaType.VIDEO) {
                             val bytes = context.contentResolver.openInputStream(statusMedia.uri)?.readBytes()
                             val mime = context.contentResolver.getType(statusMedia.uri) ?: "video/mp4"
-                            magicViewModel.triggerMagic(type, null, bytes, mime)
+                            magicViewModel?.triggerMagic(type, null, bytes, mime)
                         } else {
                             val request = ImageRequest.Builder(context)
                                 .data(statusMedia.uri)
@@ -138,14 +141,14 @@ fun MediaViewerScreen(
                             val result = coil.ImageLoader(context).execute(request)
                             val bitmap = result.drawable?.toBitmap()
                             if (bitmap != null) {
-                                magicViewModel.triggerMagic(type, bitmap)
+                                magicViewModel?.triggerMagic(type, bitmap)
                             } else {
                                 Toast.makeText(context, "Could not process image", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                 },
-                onReset = { magicViewModel.resetState() }
+                onReset = { magicViewModel?.resetState() }
             )
         }
     }
@@ -162,7 +165,6 @@ fun MediaViewerScreen(
         }
     }
 
-    val isInspectionMode = LocalInspectionMode.current
     val exoPlayer = remember(statusMedia.uri) {
         if (statusMedia.type == MediaType.VIDEO && !isInspectionMode) {
             ExoPlayer.Builder(context).build().apply {
@@ -286,7 +288,7 @@ fun MediaViewerScreen(
                     ) {
                         try {
                             onSaveMedia(statusMedia)
-                            vaultViewModel.moveToVault(statusMedia)
+                            vaultViewModel?.moveToVault(statusMedia)
                             Toast.makeText(context, "Added to Private Vault!", Toast.LENGTH_SHORT).show()
                         } catch (_: Exception) { }
                     }
@@ -299,7 +301,7 @@ fun MediaViewerScreen(
                         ) {
                             coroutineScope.launch {
                                 Toast.makeText(context, "Extracting audio...", Toast.LENGTH_SHORT).show()
-                                val audioUri = magicViewModel.extractAudio(statusMedia.uri)
+                                val audioUri = magicViewModel?.extractAudio(statusMedia.uri)
                                 if (audioUri != null) {
                                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                         type = "audio/*"
@@ -495,22 +497,46 @@ fun MediaViewerScreen(
 @Composable
 private fun ViewerTopBar(title: String, onBack: () -> Unit, onMagicClick: () -> Unit) {
     Box(
-        modifier = Modifier.fillMaxWidth().height(110.dp).background(brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)), shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+            )
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(modifier = Modifier.align(Alignment.CenterStart), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.2f))) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .offset(y = (-5).dp)
+            ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(
+                text = title,
+                modifier = Modifier.offset(y = (-5).dp),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
 
         IconButton(
             onClick = onMagicClick,
-            modifier = Modifier.align(Alignment.CenterEnd).clip(CircleShape).background(Color.White.copy(alpha = 0.2f))
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .clip(CircleShape)
         ) {
-            Icon(Icons.Default.AutoAwesome, contentDescription = "AI Magic", tint = Color.White)
+            Icon(Icons.Default.AutoAwesome,
+                contentDescription = "AI Magic",
+                tint = Color.White)
         }
     }
 }
