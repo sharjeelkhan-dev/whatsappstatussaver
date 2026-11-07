@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +77,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToAiAssistant: () -> Unit,
     onNavigateToVideoSplitter: () -> Unit = {},
+    onNavigateToRecovery: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -86,7 +88,6 @@ fun HomeScreen(
     ) { isGranted ->
         if (isGranted) onNavigateToReminder() else showPermissionDialog = true
     }
-
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun checkAndNavigateToReminder() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -102,7 +103,6 @@ fun HomeScreen(
             onNavigateToReminder()
         }
     }
-
     if (showPermissionDialog) {
         PermissionDialog(
             onDismiss = { showPermissionDialog = false },
@@ -115,7 +115,6 @@ fun HomeScreen(
             }
         )
     }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -143,7 +142,8 @@ fun HomeScreen(
                     onSavedFiles = onNavigateToSavedFiles,
                     onReminder = { checkAndNavigateToReminder() },
                     onAiAssistant = onNavigateToAiAssistant,
-                    onVideoSplitter = onNavigateToVideoSplitter
+                    onVideoSplitter = onNavigateToVideoSplitter,
+                    onRecovery = onNavigateToRecovery
                 )
             }
         }
@@ -159,32 +159,32 @@ private fun HeaderSection(onSettingsClick: () -> Unit) {
                 brush = Brush.verticalGradient(
                     colors = listOf(PrimaryGreen, SecondaryGreen)
                 ),
-                shape = RoundedCornerShape(bottomStart = 48.dp, bottomEnd = 48.dp)
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .statusBarsPadding()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 30.dp)
+            .padding(horizontal = 20.dp, vertical = 5.dp)
     ) {
-        Column(modifier = Modifier.align(Alignment.BottomStart)) {
+        Column(modifier = Modifier.align(Alignment.CenterStart))
+        {
             Text(
                 "Status Saver",
-                modifier = Modifier.offset(x = 10.dp, y = 10.dp),
-                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.offset(y = (-5).dp),
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
             Text(
                 "Keep your favorite stories forever",
-                modifier = Modifier.offset(x = 10.dp, y = 10.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.offset(y = (-6).dp),
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.8f)
             )
         }
         IconButton(
             onClick = onSettingsClick,
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 15.dp)
+                .align(Alignment.CenterEnd)
+                .offset(y = (-5).dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.setting_icon),
@@ -233,7 +233,8 @@ private fun ToolsSection(
     onSavedFiles: () -> Unit,
     onReminder: () -> Unit,
     onAiAssistant: () -> Unit,
-    onVideoSplitter: () -> Unit
+    onVideoSplitter: () -> Unit,
+    onRecovery: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp),
@@ -281,7 +282,12 @@ private fun ToolsSection(
                     modifier = Modifier.weight(1f),
                     onClick = onReminder
                 )
-                Spacer(modifier = Modifier.weight(1f))
+                ToolGridItem(
+                    title = "Recovery",
+                    icon = Icons.Default.MarkEmailUnread,
+                    modifier = Modifier.weight(1f),
+                    onClick = onRecovery
+                )
             }
         }
     }
