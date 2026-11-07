@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,7 +30,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,7 +64,6 @@ import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
-private val SoftGreen = Color(0xFFE7FFFA)
 
 data class Country(val name: String, val code: String, val flag: String, val abbrev: String)
 
@@ -187,7 +187,6 @@ val allCountries = listOf(
     Country("Zimbabwe", "+263", "🇿🇼", "ZW")
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DirectChatScreen(
     onNavigateBack: () -> Unit,
@@ -380,12 +379,12 @@ private fun DirectChatTopBar(onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
             .background(
                 brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
     ) {
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -395,13 +394,16 @@ private fun DirectChatTopBar(onBack: () -> Unit) {
                 onClick = onBack,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .offset(y = (-5).dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Direct Chat",
+                modifier = Modifier.offset(y = (-5).dp),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
