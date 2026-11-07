@@ -28,6 +28,7 @@ sealed class Screen(val route: String) {
     object AiAssistant : Screen("ai_assistant")
     object VideoSplitter : Screen("video_splitter")
     object Vault : Screen("vault")
+    object Recovery : Screen("recovery")
 
     object MediaViewer : Screen("viewer?uri={uri}&type={type}&name={name}&platform={platform}") {
         fun createRoute(uri: String, type: MediaType, name: String, platform: PlatformType): String {
@@ -68,8 +69,12 @@ fun WhatsAppStatusSaverNavHost(
                 onNavigateToReminder = { navController.navigate(Screen.Reminder.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToAiAssistant = { navController.navigate(Screen.AiAssistant.route) },
-                onNavigateToVideoSplitter = { navController.navigate(Screen.VideoSplitter.route) }
+                onNavigateToVideoSplitter = { navController.navigate(Screen.VideoSplitter.route) },
+                onNavigateToRecovery = { navController.navigate(Screen.Recovery.route) }
             )
+        }
+        composable(Screen.Recovery.route) {
+            com.sharjeel.whatsappstatussaver.ui.recovery.RecoveryScreen(onNavigateBack = { navController.popBackStack() })
         }
         composable(Screen.VideoSplitter.route) {
             com.sharjeel.whatsappstatussaver.ui.splitter.VideoSplitterScreen(
