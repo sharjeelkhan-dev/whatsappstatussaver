@@ -21,7 +21,7 @@
 <table width="100%">
   <!-- Row 1: Images -->
   <tr>
-    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/8fb01679-4c49-463d-a41c-04a4a4a5c5d8" width="100%" alt="Screen 1" /></td>
+    <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/f135546c-4eba-43ea-8734-152adcda9ed2" width="100%" alt="Screen 1" /></td>
     <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/0f0c67f3-a9fb-4bda-bcf9-8302734e7fd2" width="100%" alt="Screen 2" /></td>
     <td width="33.3%" align="center"><img src="https://github.com/user-attachments/assets/825a26ec-1eb2-42ae-865c-9c332a53fe3b" width="100%" alt="Screen 3" /></td>
   </tr>
