@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -81,7 +83,6 @@ import java.util.Locale
 
 private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
-private val SoftGreen = Color(0xFFE7FFFA)
 
 enum class ReminderScreenType { DASHBOARD, LIST, ADD }
 
@@ -117,7 +118,6 @@ fun ReminderScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderDashboardScreen(
     reminders: List<ReminderEntity>,
@@ -187,12 +187,12 @@ private fun ReminderTopBar(title: String, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
             .background(
                 brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
     ) {
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -202,13 +202,15 @@ private fun ReminderTopBar(title: String, onBack: () -> Unit) {
                 onClick = onBack,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .offset(y = (-5).dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back", tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = title,
+                modifier = Modifier.offset(y = (-5).dp),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -260,7 +262,6 @@ fun ReminderListCard(title: String, count: Int, icon: ImageVector, onClick: () -
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderListScreen(
     reminders: List<ReminderEntity>,
@@ -385,7 +386,13 @@ fun AddReminderForm(onCancel: () -> Unit, onAdd: (ReminderEntity) -> Unit) {
                         shape = RoundedCornerShape(12.dp)
                     ) { Text("Save") }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = Color.Unspecified,
+                    navigationIconContentColor = Color.Unspecified,
+                    titleContentColor = Color.Unspecified,
+                    actionIconContentColor = Color.Unspecified
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.background
