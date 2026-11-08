@@ -1,7 +1,6 @@
 package com.sharjeel.whatsappstatussaver.ui.saved
 
 import android.content.Intent
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -15,8 +14,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,11 +30,11 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,11 +76,11 @@ private val PrimaryGreen = Color(0xFF00A884)
 private val SecondaryGreen = Color(0xFF005E4C)
 private val SoftGreen = Color(0xFFE7FFFA)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedFilesScreen(
     onNavigateBack: () -> Unit,
     onNavigateToViewer: (String, MediaType, String) -> Unit,
+    onNavigateToVault: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SavedFilesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
@@ -89,6 +90,7 @@ fun SavedFilesScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onNavigateToViewer = onNavigateToViewer,
+        onNavigateToVault = onNavigateToVault,
         onClearSelection = { viewModel.clearSelection() },
         onDeleteSelectedFiles = { viewModel.deleteSelectedFiles() },
         onDeleteFile = { viewModel.deleteFile(it) },
@@ -97,12 +99,12 @@ fun SavedFilesScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedFilesContent(
     uiState: SavedFilesUiState,
     onNavigateBack: () -> Unit,
     onNavigateToViewer: (String, MediaType, String) -> Unit,
+    onNavigateToVault: () -> Unit = {},
     onClearSelection: () -> Unit,
     onDeleteSelectedFiles: () -> Unit,
     onDeleteFile: (StatusMedia) -> Unit,
@@ -120,6 +122,7 @@ fun SavedFilesContent(
                 title = if (isMultiSelectMode) "${selectedMedia.size} Selected" else "Saved Files",
                 onBack = { if (isMultiSelectMode) onClearSelection() else onNavigateBack() },
                 isMultiSelect = isMultiSelectMode,
+                onNavigateToVault = onNavigateToVault,
                 onShare = {
                     val urisToShare = uiState.media
                         .filter { selectedMedia.contains(it.uri.toString()) }
@@ -199,18 +202,19 @@ private fun SavedTopBar(
     title: String,
     onBack: () -> Unit,
     isMultiSelect: Boolean,
+    onNavigateToVault: () -> Unit = {},
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
             .background(
                 brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
     ) {
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -220,14 +224,16 @@ private fun SavedTopBar(
                 onClick = onBack,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .offset(y = (-5).dp)
             ) {
-                Icon(if (isMultiSelect) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack, 
+                Icon(if (isMultiSelect) Icons.Default.Close
+                else Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back", tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = title,
+                modifier = Modifier.offset(y = (-5).dp),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -255,6 +261,20 @@ private fun SavedTopBar(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
                 }
+            }
+        } else {
+            IconButton(
+                onClick = onNavigateToVault,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clip(CircleShape)
+                    .offset(y = (-3).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Private Vault",
+                    tint = Color.White
+                )
             }
         }
     }
@@ -297,7 +317,6 @@ private fun TabItem(label: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SavedMediaItem(
     media: StatusMedia,
