@@ -167,7 +167,7 @@ private fun HeaderSection(onSettingsClick: () -> Unit) {
         Column(modifier = Modifier.align(Alignment.CenterStart))
         {
             Text(
-                "Status Saver",
+                "Statify",
                 modifier = Modifier.offset(y = (-5).dp),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
