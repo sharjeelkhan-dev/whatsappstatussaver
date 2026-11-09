@@ -27,7 +27,7 @@ class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         Log.d("ReminderReceiver", "onReceive triggered")
-        val title = intent.getStringExtra("REMINDER_TITLE") ?: "Status Saver Reminder"
+        val title = intent.getStringExtra("REMINDER_TITLE") ?: "Statify Reminder"
         val reminderId = intent.getIntExtra("REMINDER_ID", 0)
 
         showNotification(context, title, "Time to check and save some new statuses!", reminderId)
