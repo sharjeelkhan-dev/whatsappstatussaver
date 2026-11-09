@@ -17,5 +17,7 @@ data class SavedMediaEntity(
     val sourcePlatform: PlatformType,
     val isFavorite: Boolean = false,
     val isProfilePhoto: Boolean = false,
-    val tags: String = "" // Comma-separated list of tags/contacts
+    val isVault: Boolean = false,
+    val tags: String = "", // Comma-separated list of tags/contacts
+    val extractedText: String = "" // On-device OCR text
 )
