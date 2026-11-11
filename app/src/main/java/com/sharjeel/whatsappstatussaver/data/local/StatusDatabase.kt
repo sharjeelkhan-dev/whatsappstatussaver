@@ -8,7 +8,7 @@ import com.sharjeel.whatsappstatussaver.data.local.dao.SavedMediaDao
 import com.sharjeel.whatsappstatussaver.data.local.entity.ReminderEntity
 import com.sharjeel.whatsappstatussaver.data.local.entity.SavedMediaEntity
 
-@Database(entities = [SavedMediaEntity::class, ReminderEntity::class], version = 4, exportSchema = false)
+@Database(entities = [SavedMediaEntity::class, ReminderEntity::class], version = 5, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class StatusDatabase : RoomDatabase() {
     abstract fun savedMediaDao(): SavedMediaDao
