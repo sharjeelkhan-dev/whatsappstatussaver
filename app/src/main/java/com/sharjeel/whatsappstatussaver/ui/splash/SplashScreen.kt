@@ -111,7 +111,7 @@ fun SplashScreen(onSplashScreenFinished: () -> Unit) {
             }
             Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "STATUS SAVER",
+                text = "STATIFY",
                 color = Color.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
