@@ -25,24 +25,26 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sharjeel.whatsappstatussaver.R
 import com.sharjeel.whatsappstatussaver.theme.PrimaryGreen
 import com.sharjeel.whatsappstatussaver.theme.SecondaryGreen
 import com.sharjeel.whatsappstatussaver.theme.WhatsAppStatusSaverTheme
 
 private val AccentGold = Color(0xFFFFD700)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val isAutoSave by viewModel.isAutoSave.collectAsState()
     val isPremium by viewModel.isPremium.collectAsState()
     val customSaveLocation by viewModel.customSaveLocation.collectAsState()
     val context = LocalContext.current
@@ -74,11 +76,13 @@ fun SettingsScreen(
 
     SettingsContent(
         isDarkMode = isDarkMode,
+        isAutoSave = isAutoSave,
         isPremium = isPremium,
         customSaveLocation = customSaveLocation,
         isExporting = isExporting,
         onNavigateBack = onNavigateBack,
         onDarkModeToggle = { viewModel.setDarkMode(it) },
+        onAutoSaveToggle = { viewModel.setAutoSave(context, it) },
         onSelectFolder = { folderLauncher.launch(null) },
         onUpgradePremium = {
             if (!isPremium) viewModel.launchBillingFlow(context as Activity)
@@ -94,17 +98,21 @@ fun SettingsScreen(
 @Composable
 fun SettingsContent(
     isDarkMode: Boolean,
+    isAutoSave: Boolean,
     isPremium: Boolean,
     customSaveLocation: String?,
     isExporting: Boolean,
     onNavigateBack: () -> Unit,
     onDarkModeToggle: (Boolean) -> Unit,
+    onAutoSaveToggle: (Boolean) -> Unit,
     onSelectFolder: () -> Unit,
     onUpgradePremium: () -> Unit,
     onExportData: () -> Unit,
     onCloudBackup: () -> Unit
 ) {
     Scaffold(
+        // Edge-to-edge ke liye contentWindowInsets ko zero set kiya hai taake layout khud control ho
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             SettingsTopBar(onBack = onNavigateBack)
         },
@@ -115,7 +123,9 @@ fun SettingsContent(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                // Navigation bars (gesture bar/buttons) ke peeche content chupne se bachane ke liye padding
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
             // Premium Card
@@ -128,16 +138,29 @@ fun SettingsContent(
                     title = "Dark Mode",
                     subtitle = "Switch between light and dark theme",
                     action = {
-                        Switch(
-                            checked = isDarkMode,
-                            onCheckedChange = onDarkModeToggle,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF7C4DFF),
-                                uncheckedThumbColor = Color.Gray,
-                                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f),
-                                uncheckedBorderColor = Color.Gray
-                            )
+                        Icon(
+                            painter = painterResource(id = if (isDarkMode) R.drawable.toggle_on_line_icon else R.drawable.toggle_off_line_icon),
+                            contentDescription = "Toggle Dark Mode",
+                            tint = if (isDarkMode) Color(0xFF7C4DFF) else Color.Gray,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable { onDarkModeToggle(!isDarkMode) }
+                        )
+                    }
+                )
+                SettingsRow(
+                    icon = Icons.Default.Autorenew,
+                    iconTint = Color(0xFF00A884),
+                    title = "Auto Save Statuses",
+                    subtitle = "Automatically save new statuses in background",
+                    action = {
+                        Icon(
+                            painter = painterResource(id = if (isAutoSave) R.drawable.toggle_on_line_icon else R.drawable.toggle_off_line_icon),
+                            contentDescription = "Toggle Auto Save",
+                            tint = if (isAutoSave) PrimaryGreen else Color.Gray,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clickable { onAutoSaveToggle(!isAutoSave) }
                         )
                     }
                 )
@@ -170,7 +193,7 @@ fun SettingsContent(
                     onClick = onCloudBackup
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -181,12 +204,12 @@ private fun SettingsTopBar(onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp)
             .background(
                 brush = Brush.verticalGradient(listOf(PrimaryGreen, SecondaryGreen)),
-                shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 5.dp)
     ) {
         Row(
             modifier = Modifier.align(Alignment.CenterStart),
@@ -196,13 +219,15 @@ private fun SettingsTopBar(onBack: () -> Unit) {
                 onClick = onBack,
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .offset(y = (-5).dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back", tint = Color.White)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Settings",
+                modifier = Modifier.offset(y = (-5).dp),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -249,14 +274,18 @@ private fun PremiumStatusCard(isPremium: Boolean, onUpgrade: () -> Unit) {
                     color = if (isPremium) Color.White else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = if (isPremium) "Thank you for supporting us!" else "Remove ads and unlock all tools",
+                    text = if (isPremium) "Thank you for supporting us!"
+                    else "Remove ads and unlock all tools",
                     fontSize = 13.sp,
-                    color = if (isPremium) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isPremium) Color.White.copy(alpha = 0.7f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (!isPremium) {
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -306,21 +335,28 @@ fun SettingsRow(
         Box(
             modifier = Modifier
                 .size(44.dp)
-                .background(iconTint.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                .background(iconTint.copy(alpha = 0.15f),
+                    RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
+            Icon(icon, contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp))
         }
-
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
-            Text(text = subtitle, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = title, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp)
+            Text(text = subtitle, fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
         if (action != null) {
             action()
         } else if (onClick != null) {
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -331,11 +367,13 @@ fun SettingsScreenPreview() {
     WhatsAppStatusSaverTheme {
         SettingsContent(
             isDarkMode = false,
+            isAutoSave = false,
             isPremium = false,
             customSaveLocation = null,
             isExporting = false,
             onNavigateBack = {},
             onDarkModeToggle = {},
+            onAutoSaveToggle = {},
             onSelectFolder = {},
             onUpgradePremium = {},
             onExportData = {},
