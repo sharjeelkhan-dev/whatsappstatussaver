@@ -29,5 +29,5 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-rootProject.name = "WhatsApp Status Saver"
+rootProject.name = "Statify"
 include(":app")
