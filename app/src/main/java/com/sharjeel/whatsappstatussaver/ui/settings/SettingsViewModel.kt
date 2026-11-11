@@ -1,5 +1,6 @@
 package com.sharjeel.whatsappstatussaver.ui.settings
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import com.sharjeel.whatsappstatussaver.data.billing.BillingManager
 import com.sharjeel.whatsappstatussaver.data.local.datastore.AppSettings
 import com.sharjeel.whatsappstatussaver.data.repository.CloudBackupRepository
 import com.sharjeel.whatsappstatussaver.domain.usecase.ExportMediaUseCase
+import com.sharjeel.whatsappstatussaver.utils.AutoSaveStatusWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +27,9 @@ class SettingsViewModel @Inject constructor(
     val isDarkMode: StateFlow<Boolean> = appSettings.isDarkModeFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val isAutoSave: StateFlow<Boolean> = appSettings.autoSaveEnabledFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
     val customSaveLocation: StateFlow<String?> = appSettings.customSaveLocationFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -36,13 +41,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setAutoSave(context: Context, enabled: Boolean) {
+        viewModelScope.launch {
+            appSettings.setAutoSaveEnabled(enabled)
+            AutoSaveStatusWorker.scheduleAutoSaveWorker(context, enabled)
+        }
+    }
+
     fun setSaveLocation(uri: Uri?) {
         viewModelScope.launch {
             appSettings.setCustomSaveLocation(uri?.toString())
         }
     }
 
-    fun exportMedia(destinationUri: android.net.Uri, onComplete: (Boolean) -> Unit) {
+    fun exportMedia(destinationUri: Uri, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             val success = exportMediaUseCase.exportToZip(destinationUri)
             onComplete(success)
