@@ -19,6 +19,7 @@ import com.sharjeel.whatsappstatussaver.data.models.PlatformType
 import com.sharjeel.whatsappstatussaver.data.models.StatusMedia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -408,6 +409,20 @@ class StorageRepository @Inject constructor(
             if (savedUri == null) return@withContext false
 
             savedMediaDao.insertMedia(SavedMediaEntity(uriString = savedUri.toString(), name = statusMedia.name, type = statusMedia.type, size = statusMedia.size, dateSaved = System.currentTimeMillis(), sourcePlatform = statusMedia.platform, isFavorite = false, isProfilePhoto = statusMedia.isProfilePhoto))
+            
+            if (statusMedia.type == MediaType.IMAGE) {
+                kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+                    try {
+                        val text = com.sharjeel.whatsappstatussaver.domain.usecase.OcrTextRecognitionUseCase(context)(savedUri)
+                        if (text.isNotBlank()) {
+                            val entity = savedMediaDao.getMediaByName(statusMedia.name)
+                            if (entity != null) {
+                                savedMediaDao.updateExtractedText(entity.id, text)
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
             
             val extension = MimeTypeMap.getFileExtensionFromUrl(statusMedia.name)
             val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
